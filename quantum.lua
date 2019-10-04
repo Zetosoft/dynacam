@@ -3,7 +3,15 @@ local quantum = {}
 ---------------------------------------------- Constants
 local DEFAULT_ATTENUATION = {0.4, 3, 20}
 local DEFAULT_COLOR = {1, 1, 1, 1}
+local DEFAULT_NORMAL = {0.5, 0.5, 1.0}
 local DEFAULT_Z = 0.2
+
+local FUNCTIONS = {
+	SPRITE = {"play", "pause", "setFrame", "setSequence"},
+	SNAPSHOT = {"invalidate"},
+	LINE = {"append"},
+	DISPLAY = {"rotate", "scale", "setMask", "toBack", "toFront", "translate", "removeSelf"},
+}
 ---------------------------------------------- Metatables
 local meshPathEntangleMetatable = { -- used to intercept mesh path functions and replicate to normal
 	__index = function(self, index)
@@ -106,18 +114,14 @@ end
 local function entangleObject(lightObject)
 	lightObject.viewRotation = 0
 	
-	lightObject.fillProxy = setmetatable({
+	lightObject.fillProxy = setmetatable({ -- Fill proxy is used to forward fill property changes to normal object
 		normalObject = lightObject.normalObject,
-		fill = nil, -- Is set during query
+		fill = nil, -- Is set during metatable query
 	}, fillProxyMetatable)
 	
-	entangleFunction(lightObject, "rotate")
-	entangleFunction(lightObject, "scale")
-	entangleFunction(lightObject, "setMask")
-	entangleFunction(lightObject, "toBack")
-	entangleFunction(lightObject, "toFront")
-	entangleFunction(lightObject, "translate")
-	entangleFunction(lightObject, "removeSelf")
+	for fIndex = 1, #FUNCTIONS.DISPLAY do
+		entangleFunction(lightObject, FUNCTIONS.DISPLAY[fIndex])
+	end
 	
 	rawset(lightObject, "_oldMeta", getmetatable(lightObject))
 	setmetatable(lightObject, entangleMetatable)
@@ -172,12 +176,7 @@ function quantum.newCircle(x, y, radius)
 	local lightCircle = display.newCircle(x, y, radius)
 	local normalCircle = display.newCircle(x, y, radius)
 	
-	normalCircle.fill.effect = "filter.custom.rotate"
-	
-	lightCircle.normalObject = normalCircle
-	entangleObject(lightCircle)
-	
-	return lightCircle
+	return quantum.newLightObject(lightCircle, normalCircle)
 end
 
 function quantum.newContainer(width, height)
@@ -198,12 +197,7 @@ function quantum.newImage(filename, normalFilename, baseDir)
 	local lightImage = display.newImage(filename, baseDir)
 	local normalImage = display.newImage(normalFilename, baseDir)
 	
-	normalImage.fill.effect = "filter.custom.rotate"
-	
-	lightImage.normalObject = normalImage
-	entangleObject(lightImage)
-	
-	return lightImage
+	return quantum.newLightObject(lightImage, normalImage)
 end
 
 function quantum.newImageRect(filename, normalFilename, baseDir, width, height)
@@ -212,25 +206,15 @@ function quantum.newImageRect(filename, normalFilename, baseDir, width, height)
 	local lightImageRect = display.newImageRect(filename, baseDir, width, height)
 	local normalImageRect = display.newImageRect(normalFilename, baseDir, width, height)
 	
-	normalImageRect.fill.effect = "filter.custom.rotate"
-	
-	lightImageRect.normalObject = normalImageRect
-	entangleObject(lightImageRect)
-	
-	return lightImageRect
+	return quantum.newLightObject(lightImageRect, normalImageRect)
 end
 
 function quantum.newLine(...)
 	local lightLine = display.newLine(...)
 	local normalLine = display.newLine(...)
-	normalLine:setStrokeColor(0.5, 0.5, 1.0) -- Normal vector facing up
+	normalLine:setStrokeColor(unpack(DEFAULT_NORMAL)) -- Normal vector facing up
 	
-	entangleFunction(lightLine, "append")
-	
-	lightLine.normalObject = normalLine
-	entangleObject(lightLine)
-	
-	return lightLine
+	return quantum.newLightObject(lightLine, normalLine, FUNCTIONS.LINE)
 end
 
 function quantum.newMesh(options)
@@ -275,24 +259,14 @@ function quantum.newPolygon(x, y, vertices)
 	local lightPolygon = display.newPolygon(x, y, vertices)
 	local normalPolygon = display.newPolygon(x, y, vertices)
 	
-	normalPolygon.fill.effect = "filter.custom.rotate"
-	
-	lightPolygon.normalObject = normalPolygon
-	entangleObject(lightPolygon)
-	
-	return lightPolygon
+	return quantum.newLightObject(lightPolygon, normalPolygon)
 end
 
 function quantum.newRoundedRect(x, y, width, height, cornerRadius)
 	local lightRoundedRect = display.newRoundedRect(x, y, width, height, cornerRadius)
 	local normalRoundedRect = display.newRoundedRect(x, y, width, height, cornerRadius)
 	
-	normalRoundedRect.fill.effect = "filter.custom.rotate"
-	
-	lightRoundedRect.normalObject = normalRoundedRect
-	entangleObject(lightRoundedRect)
-	
-	return lightRoundedRect
+	return quantum.newLightObject(lightRoundedRect, normalRoundedRect)
 end
 
 function quantum.newSnapshot(width, height)
@@ -302,21 +276,15 @@ function quantum.newSnapshot(width, height)
 	lightSnapshot.oldInsert = lightSnapshot.insert
 	lightSnapshot.insert = lightInsert
 	
-	entangleFunction(lightSnapshot, "invalidate")
-	
-	lightSnapshot.normalObject = normalSnapshot
-	entangleObject(lightSnapshot)
-	
-	return lightSnapshot
+	return quantum.newLightObject(lightSnapshot, normalSnapshot, FUNCTIONS.SNAPSHOT)
 end
 
 function quantum.newText(options)
 	options = options or {}
-	local normal = options.normal or {0.5, 0.5, 1.0}
+	local normal = options.normal or DEFAULT_NORMAL
 	
 	local lightText = display.newText(options)
 	local normalText = display.newText(options)
-	
 	normalText.fill = normal
 	
 	lightText.normalObject = normalText
@@ -329,29 +297,31 @@ function quantum.newRect(x, y, width, height)
 	local lightRect = display.newRect(x, y, width, height)
 	local normalRect = display.newRect(x, y, width, height)
 	
-	normalRect.fill.effect = "filter.custom.rotate"
-	
-	lightRect.normalObject = normalRect
-	entangleObject(lightRect)
-	
-	return lightRect
+	return quantum.newLightObject(lightRect, normalRect)
 end
 
 function quantum.newSprite(diffuseSheet, normalSheet, sequenceData)
 	local lightSprite = display.newSprite(diffuseSheet, sequenceData)
 	local normalSprite = display.newSprite(normalSheet, sequenceData)
 	
-	entangleFunction(lightSprite, "play")
-	entangleFunction(lightSprite, "pause")
-	entangleFunction(lightSprite, "setFrame")
-	entangleFunction(lightSprite, "setSequence")
+	return quantum.newLightObject(lightSprite, normalSprite, FUNCTIONS.SPRITE)
+end
+
+function quantum.newLightObject(diffuseObject, normalObject, entangleFunctions)
+	entangleFunctions = entangleFunctions or {}
+	diffuseObject.normalObject = normalObject
 	
-	normalSprite.fill.effect = "filter.custom.rotate"
+	for fIndex = 1, #entangleFunctions do
+		entangleFunction(diffuseObject, entangleFunctions[fIndex])
+	end
 	
-	lightSprite.normalObject = normalSprite
-	entangleObject(lightSprite)
+	if normalObject.fill then
+		normalObject.fill.effect = "filter.custom.rotate"
+	end
 	
-	return lightSprite
+	entangleObject(diffuseObject)
+	
+	return diffuseObject
 end
 
 return quantum

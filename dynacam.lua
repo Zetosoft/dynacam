@@ -23,6 +23,8 @@ local rotationX, rotationY
 local finalX, finalY
 ---------------------------------------------- Constants
 local RADIANS_MAGIC = 0.0174532925 -- Used to convert degrees to radians (pi / 180)
+
+local DEFAULT_ATTENUATION = {0.4, 3, 20}
 ---------------------------------------------- Cache
 local mathAbs = math.abs
 local mathHuge = math.huge
@@ -156,9 +158,9 @@ local function cameraEnterFrame(self, event)
 		lightDrawer.fill = {type = "image", filename = self.normalBuffer.filename, baseDir = self.normalBuffer.baseDir}
 		lightDrawer.fill.blendMode = "add"
 		lightDrawer.fill.effect = "filter.custom.light"
-		
 		lightDrawer.fill.effect.pointLightPos = light.position
 		lightDrawer.fill.effect.pointLightColor = light.color
+		lightDrawer.fill.effect.attenuationFactors = light.attenuationFactors or DEFAULT_ATTENUATION
 		
 		self.lightBuffer:draw(lightDrawer)
 		

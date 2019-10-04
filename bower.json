@@ -1,7 +1,6 @@
 {
 	"name": "dynacam",
 	"version": "1.0",
-	"author":"Basilio Germán",
 	"main": "dynacam.lua",
 	"dependencies": {
 

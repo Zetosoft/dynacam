@@ -60,10 +60,7 @@ local function keyListener(event)
 	end
 end
 
-local function buildMap()
-	display.remove(mapGroup)
-	mapGroup = dynacam.newGroup()
-	
+local function createBackground()
 	-- Tiles
 	local size = 250
 	for y = 1, #MAP do
@@ -74,10 +71,9 @@ local function buildMap()
 			mapGroup:insert(rect)
 		end
 	end
-	
-	local mWidth = mapGroup.width
-	local mHeight = mapGroup.height
-	
+end
+
+local function addlights()
 	-- Add lights to world
 	for lIndex = 1, #lightData do 
 		local lData = lightData[lIndex]
@@ -91,7 +87,9 @@ local function buildMap()
 		light.z = lData.position[3]
 		mapGroup:insert(light)
 	end
-	
+end
+
+local function addTestSprites()
 	 -- Test sprite coin
 	local coinSpriteSheet = {
 		sheetData = {width = 32, height = 32, numFrames = 8},
@@ -141,7 +139,9 @@ local function buildMap()
 	camera:addBody(spriteGroup, "dynamic", {friction = 0.5, bounce = 0.1, density = 1, box = {halfWidth = 32, halfHeight = 32}})
 	spriteGroup.angularDamping = 0.2
 	spriteGroup.linearDamping = 0.2
-	
+end
+
+local function addPlayerCharacter()
 	-- Player Character
 	pCharacter = dynacam.newGroup()
 	pCharacter.x = 800
@@ -166,6 +166,16 @@ local function buildMap()
 	camera:addBody(pCharacter, "dynamic", {friction = 0.5, bounce = 0.1, density = 1, radius = 98})
 	pCharacter.angularDamping = 2
 	pCharacter.linearDamping = 0.2
+end
+
+local function createWorld()
+	display.remove(mapGroup)
+	mapGroup = dynacam.newGroup()
+	
+	createBackground()
+	addlights()
+	addTestSprites()
+	addPlayerCharacter()
 end
 
 local function startGame()
@@ -222,5 +232,5 @@ local function initialize()
 end
 ----------------------------------------------- Module functions 
 initialize(event)
-buildMap()
+createWorld()
 startGame()

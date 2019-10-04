@@ -346,5 +346,4 @@ function quantum.newSprite(diffuseSheet, normalSheet, sequenceData)
 	return lightSprite
 end
 
-
 return quantum

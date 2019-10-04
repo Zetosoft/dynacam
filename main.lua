@@ -101,15 +101,15 @@ local function addTestSprites()
 	local cDiffuseSheet = graphics.newImageSheet(coinSpriteSheet.diffuse, coinSpriteSheet.sheetData)
 	local cNormalSheet = graphics.newImageSheet(coinSpriteSheet.normal, coinSpriteSheet.sheetData)
 	
-	local cSprite = dynacam.newSprite(cDiffuseSheet, cNormalSheet, coinSpriteSheet.sequenceData)
-	cSprite.x = 800
-	cSprite.y = 300
-	cSprite:setSequence("idle")
-	cSprite:play()
-	mapGroup:insert(cSprite)
-	camera:addBody(cSprite, "dynamic", {friction = 0.5, bounce = 0.1, density = 1})
-	cSprite.angularDamping = 0.2
-	cSprite.linearDamping = 0.2
+	local coinSprite = dynacam.newSprite(cDiffuseSheet, cNormalSheet, coinSpriteSheet.sequenceData)
+	coinSprite.x = 800
+	coinSprite.y = 300
+	coinSprite:setSequence("idle")
+	coinSprite:play()
+	mapGroup:insert(coinSprite)
+	camera:addBody(coinSprite, "dynamic", {friction = 0.5, bounce = 0.1, density = 1})
+	coinSprite.angularDamping = 0.2
+	coinSprite.linearDamping = 0.2
 	
 	-- Test sprite health box
 	local spriteGroup = dynacam.newGroup()

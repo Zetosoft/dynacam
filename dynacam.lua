@@ -1,7 +1,7 @@
 ---------------------------------------------- Dynacam - Dynamic Lighting Camera System - Basilio Germán
-local sceneParams = ...
-local sceneName = sceneParams.name or sceneParams
-local requirePath = sceneParams.path or ""
+local moduleParams = ...
+local moduleName = moduleParams.name or moduleParams
+local requirePath = moduleParams.path or ""
 local projectPath = string.gsub(requirePath, "%.", "/")
 
 require(requirePath.."shaders.rotate")
@@ -11,7 +11,11 @@ require(requirePath.."shaders.light")
 local quantum = require(requirePath.."quantum")
 local physics = require("physics")
 
-local dynacam = {}
+local dynacam = setmetatable({}, { -- Quantum provides object creation
+	__index = function(self, index)
+		return quantum[index]
+	end,
+})
 ---------------------------------------------- Variables
 local targetRotation, focusAngle
 local otherRotationX, otherRotationY
@@ -303,6 +307,10 @@ local function cameraAddBody(self, object, ...)
 end
 
 local function cameraNewLight(self, options)
+	if self.debug then
+		options.debug = true
+	end
+	
 	local light = quantum.newLight(options)
 	light.camera = self
 	light:addEventListener("finalize", finalizeCameraLight)
@@ -317,34 +325,6 @@ function dynacam.refresh()
 	ccy = display.contentCenterY
 	vcw = display.viewableContentWidth
 	vch = display.viewableContentHeight
-end
-
-function dynacam.newSprite(...)
-	return quantum.newSprite(...)
-end
-
-function dynacam.newRect(...)
-	return quantum.newRect(...)
-end
-
-function dynacam.newGroup()
-	return quantum.newGroup()
-end
-
-function dynacam.newText(...)
-	return quantum.newText(...)
-end
-
-function dynacam.newLine(...)
-	return quantum.newLine(...)
-end
-
-function dynacam.newMesh(...)
-	return quantum.newMesh(...)
-end
-
-function dynacam.newPolygon(...)
-	return quantum.newPolygon(...)
 end
 
 function dynacam.newCamera(options)
@@ -394,7 +374,9 @@ function dynacam.newCamera(options)
 	canvas.fill.effect = "composite.custom.apply"
 	canvas.fill.effect.ambientLightColor = {0, 0, 0, 1}
 	
-	if options.debug then
+	if options.debug == "light" then
+		canvas.fill = {type = "image", filename = camera.lightBuffer.filename, baseDir = camera.lightBuffer.baseDir}
+	elseif options.debug then
 		canvas.fill = {type = "image", filename = camera.normalBuffer.filename, baseDir = camera.normalBuffer.baseDir}
 	end
 	

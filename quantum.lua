@@ -127,7 +127,7 @@ local function lightInsert(self, lightObject)
 	lightObject.parentRotation = self.viewRotation -- Let metatable update efefct
 end
 ---------------------------------------------- Module functions
-function quantum.newLight(options)
+function quantum.newLight(options) -- Only meant to be used internally by dynacam, or will fail to be updated
 	options = options or {}
 	
 	local color = options.color or {1, 1, 1, 1}
@@ -135,7 +135,9 @@ function quantum.newLight(options)
 	local light = display.newGroup()
 	light.normalObject = display.newGroup()
 	
-	display.newCircle(light, 0, 0, 5) -- Debug view
+	if options.debug then
+		display.newCircle(light, 0, 0, 5) -- Debug view
+	end
 	
 	entangleObject(light)
 	

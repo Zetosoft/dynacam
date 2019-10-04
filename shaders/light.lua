@@ -83,13 +83,13 @@ P_COLOR vec4 FragmentKernel(P_UV vec2 texCoord) {
 	normalPixel.y = -normalPixel.y;
 	
 	// Fix scale proportion
-	P_UV vec3 fragment_to_light = (pointLightPos - vec3(texCoord, 0.0));
-	fragment_to_light.x *= proportion;
+	P_UV vec3 fragmentToLight = (pointLightPos - vec3(texCoord, 0.0));
+	fragmentToLight.x *= proportion;
 
-	P_UV vec3 lightDirection = normalize(fragment_to_light);
+	P_UV vec3 lightDirection = normalize(fragmentToLight);
 	
 	// Distance attenuation.
-	P_UV float attenuation = GetDistanceAttenuation( u_UserData2, length(fragment_to_light));
+	P_UV float attenuation = GetDistanceAttenuation( u_UserData2, length(fragmentToLight));
 
 	// Apply light intensity, avoid negative intensities
 	P_UV float diffuseIntensity = max(dot(lightDirection, normalPixel), 0.0);
@@ -99,7 +99,7 @@ P_COLOR vec4 FragmentKernel(P_UV vec2 texCoord) {
 
 	// Add point light color.
 	P_COLOR vec4 lightColor = vec4(pointLightColor * diffuseIntensity, 1.0);
-
+	
 	////////////////////////////////////////////////////////////////////////////////////////////////
 	#if 1 // Debug and testing
 		// Adjust for resolution
@@ -124,17 +124,13 @@ P_COLOR vec4 FragmentKernel(P_UV vec2 texCoord) {
 				return vec4(1.0, 0.0, 0.0, 1.0);
 			}
 		}
-		else if(lightDistance < outer_threshold) {
-			// The outline is always white.
-			return vec4( 1.0, 1.0, 1.0, 1.0 );
+		else if (lightDistance < outer_threshold) {
+			// White outline
+			return vec4( 1.0, 1.0, 1.0, 1.0);
 		}
 	#endif
 
-	#if 0 // Debug and testing
-		return (lightColor * v_ColorScale);
-	#endif
-
-	return vec4((pointLightColor * diffuseIntensity), diffuseIntensity);
+	return lightColor;
 }
 ]]
 

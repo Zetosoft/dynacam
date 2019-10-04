@@ -158,10 +158,10 @@ local function addPlayerCharacter()
 	pCharacter:insert(ship)
 	pCharacter.ship = ship
 	
-	local shipLight = camera:newLight({color = {0.5, 1, 0.5, 1}})
+	local shipLight = camera:newLight({color = {1, 1, 1, 1}})
 	shipLight.x = 350
 	shipLight.y = 0
-	shipLight.z = 0.2
+	shipLight.z = 0.1
 	pCharacter:insert(shipLight)
 	
 	camera:addBody(pCharacter, "dynamic", {friction = 0.5, bounce = 0.1, density = 1, box = {halfWidth = 120, halfHeight = 64}})
@@ -211,7 +211,28 @@ local function addTestOther()
 	local polygon = dynacam.newPolygon(1500, 1250, vertices)
 	polygon.fill = {type = "image", filename = FILLS[2].diffuse}
 	polygon.normal = {type = "image", filename = FILLS[2].normal}
+	polygon.fill.rotation = 90
 	mapGroup:insert(polygon)
+	
+	-- Circle
+	local circle = dynacam.newCircle(1250, 1250, 100)
+	circle.fill = {type = "image", filename = FILLS[1].diffuse}
+	circle.normal = {type = "image", filename = FILLS[1].normal}
+	circle.fill.scaleX = 5
+	circle.fill.scaleY = 5
+	mapGroup:insert(circle)
+	
+	-- RoundedRect
+	local roundedRect = dynacam.newRoundedRect(1750, 1250, 200, 150, 50)
+	roundedRect.fill = {type = "image", filename = FILLS[2].diffuse}
+	roundedRect.normal = {type = "image", filename = FILLS[2].normal}
+	mapGroup:insert(roundedRect)
+	
+	-- newImage
+	local otherShip = dynacam.newImage("images/spaceship_carrier_02.png", "images/spaceship_carrier_02_n.png")
+	otherShip.x = 2750
+	otherShip.y = 1500
+	mapGroup:insert(otherShip)
 end
 
 local function createWorld()

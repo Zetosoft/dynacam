@@ -41,18 +41,18 @@ P_NORMAL float proportion = CoronaTexelSize.y / CoronaTexelSize.x;
 
 P_COLOR vec4 FragmentKernel(P_UV vec2 texCoord) {
 	// Diffuse color
-	P_COLOR vec4 texColor = texture2D(u_FillSampler0, texCoord);
+	P_COLOR vec4 diffuseColor = texture2D(u_FillSampler0, texCoord);
 
 	// Lightmap color
-	P_NORMAL vec4 encoded = texture2D(u_FillSampler1, texCoord);
-	P_NORMAL vec3 diffuseIntensity = encoded.xyz;
+	P_NORMAL vec4 lightBuffer = texture2D(u_FillSampler1, texCoord);
 	
 	// Intensity map
-	P_NORMAL float intensity = encoded.w;
+	P_COLOR vec3 bufferColor = lightBuffer.xyz;
+	P_NORMAL float nothing = lightBuffer.w;
 	
-	texColor.rgb *= ambientLightColor + diffuseIntensity;
-
-	return (texColor * v_ColorScale);
+	diffuseColor.rgb *= ambientLightColor + bufferColor;
+	
+	return (diffuseColor * v_ColorScale);
 }
 ]]
 

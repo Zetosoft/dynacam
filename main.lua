@@ -68,6 +68,7 @@ local function createBackground()
 			local rect = dynacam.newRect(x * size, y * size, size, size)
 			rect.fill = {type = "image", filename = FILLS[MAP[y][x]].diffuse}
 			rect.normal = {type = "image", filename = FILLS[MAP[y][x]].normal}
+			
 			mapGroup:insert(rect)
 		end
 	end
@@ -225,7 +226,7 @@ end
 local function startGame()
 	camera:start()
 	camera:add(mapGroup)
-	camera:setFocus(pCharacter, {trackRotation = true}) -- TODO: must support rotation of lights!
+	camera:setFocus(pCharacter, {trackRotation = false}) -- TODO: must support rotation of lights!
 	
 	local counter = 0
 	Runtime:addEventListener("enterFrame", function()

@@ -15,10 +15,29 @@ local meshPathEntangleMetatable = {
 	end
 }
 
+local fillProxyMetatable = {
+	__index = function(self, index)
+		return self.fill[index]
+	end,
+	__newindex = function(self, index, value)
+		if index == "fill" then -- Entangle metatable is setting fill reference
+			return rawset(self, index, value)
+		elseif index ~= "effect" then
+			self.normalObject.fill[index] = value
+		end
+		
+		self.fill[index] = value
+	end,
+}
+
 local entangleMetatable = {
 	__index = function(self, index)
 		if index == "parentRotation" then
 			return self.parent.viewRotation -- Will be nil once we hit normal objects in hierarchy
+		elseif index == "fill" then
+			self.fillProxy.fill = self._oldMeta.__index(self, index)
+			
+			return self.fillProxy
 		end
 		return self._oldMeta.__index(self, index)
 	end,
@@ -28,13 +47,13 @@ local entangleMetatable = {
 			if normalObject.fill then
 				normalObject.fill = value
 				normalObject.fill.effect = "filter.custom.rotate"
-				normalObject.fill.effect.rotation = math.rad(self.viewRotation)
+				normalObject.fill.effect.rotation = math.rad(self.viewRotation + self.fill.rotation)
 			end
 		elseif index == "parentRotation" then -- Parent is telling us to update our view rotation 
 			self.viewRotation = value + self.rotation
 			
 			if normalObject.fill and normalObject.fill.effect then
-				normalObject.fill.effect.rotation = math.rad(self.viewRotation)
+				normalObject.fill.effect.rotation = math.rad(self.viewRotation + self.fill.rotation)
 			end
 			
 			if self.numChildren then
@@ -84,6 +103,11 @@ end
 
 local function entangleObject(lightObject)
 	lightObject.viewRotation = 0
+	
+	lightObject.fillProxy = setmetatable({
+		normalObject = lightObject.normalObject,
+		fill = nil, -- Is set during query
+	}, fillProxyMetatable)
 	
 	entangleFunction(lightObject, "rotate")
 	entangleFunction(lightObject, "scale")

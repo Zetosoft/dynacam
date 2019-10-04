@@ -282,29 +282,11 @@ function dynacam.newSprite(diffuseSheet, normalSheet, sequenceData)
 end
 
 function dynacam.newRect(x, y, width, height)
-	local diffuseRect = display.newRect(x, y, width, height)
-	local normalRect = display.newRect(x, y, width, height)
-	
-	normalRect.fill.effect = "filter.custom.rotate"
-	
-	diffuseRect.normalObject = normalRect
-	entangleObject(diffuseRect)
-	
-	return diffuseRect
+	return quantum.newRect(x, y, width, height)
 end
 
 function dynacam.newGroup()
-	local diffuseGroup = display.newGroup()
-	diffuseGroup.normalObject = display.newGroup()
-	
-	diffuseGroup.isLightGroup = true
-	
-	diffuseGroup.oldInsert = diffuseGroup.insert
-	diffuseGroup.insert = lightGroupInsert
-	
-	entangleObject(diffuseGroup)
-	
-	return diffuseGroup
+	return quantum.newGroup()
 end
 
 function dynacam.newCamera(options)

@@ -25,7 +25,7 @@ local entangleMetatable = {
 				normalObject.fill.effect.rotation = math.rad(self.viewRotation)
 			end
 			
-			if self.isLightGroup then
+			if self.numChildren then
 				for cIndex = 1, self.numChildren do
 					local lightObject = self[cIndex]
 					
@@ -40,7 +40,7 @@ local entangleMetatable = {
 				-- Rotation was already set in _oldMeta
 				self.viewRotation = (self.parentRotation or 0) + value -- parentRotation can be nil
 				
-				if self.isLightGroup then
+				if self.numChildren then
 					for cIndex = 1, self.numChildren do
 						local lightObject = self[cIndex]
 						
@@ -100,39 +100,54 @@ function quantum.newLight(self, options)
 	light.position = {0, 0, 0.2} -- Auto updates for fast shader data pass
 	light.z = 0.2
 	light.color = color
-	light.isLight = true
 	
 	return light
 end
 
 function quantum.newGroup()
+	local lightGroup = display.newGroup()
+	lightGroup.normalObject = display.newGroup()
 	
+	lightGroup.oldInsert = lightGroup.insert
+	lightGroup.insert = lightGroupInsert
+	
+	entangleObject(lightGroup)
+	
+	return lightGroup
 end
 
-function quantum.newRect()
+function quantum.newRect(x, y, width, height)
+	local lightRect = display.newRect(x, y, width, height)
+	local normalRect = display.newRect(x, y, width, height)
 	
+	normalRect.fill.effect = "filter.custom.rotate"
+	
+	lightRect.normalObject = normalRect
+	entangleObject(lightRect)
+	
+	return lightRect
 end
 
 function quantum.newSprite(diffuseSheet, normalSheet, sequenceData)
-	local diffuseSprite = display.newSprite(diffuseSheet, sequenceData)
+	local lightSprite = display.newSprite(diffuseSheet, sequenceData)
 	local normalSprite = display.newSprite(normalSheet, sequenceData)
 	
-	diffuseSprite.oldPlay = diffuseSprite.play
-	diffuseSprite.oldPause = diffuseSprite.pause
-	diffuseSprite.oldSetFrame = diffuseSprite.setFrame
-	diffuseSprite.oldSetSequence = diffuseSprite.setSequence
+	lightSprite.oldPlay = lightSprite.play
+	lightSprite.oldPause = lightSprite.pause
+	lightSprite.oldSetFrame = lightSprite.setFrame
+	lightSprite.oldSetSequence = lightSprite.setSequence
 	
-	entangleFunction(diffuseSprite, "play")
-	entangleFunction(diffuseSprite, "pause")
-	entangleFunction(diffuseSprite, "setFrame")
-	entangleFunction(diffuseSprite, "setSequence")
+	entangleFunction(lightSprite, "play")
+	entangleFunction(lightSprite, "pause")
+	entangleFunction(lightSprite, "setFrame")
+	entangleFunction(lightSprite, "setSequence")
 	
 	normalSprite.fill.effect = "filter.custom.rotate"
 	
-	diffuseSprite.normalObject = normalSprite
-	entangleObject(diffuseSprite)
+	lightSprite.normalObject = normalSprite
+	entangleObject(lightSprite)
 	
-	return diffuseSprite
+	return lightSprite
 end
 
 

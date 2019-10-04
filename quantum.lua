@@ -21,7 +21,7 @@ local entangleMetatable = {
 		elseif index == "parentRotation" then -- Parent is telling us to update our view rotation 
 			self.viewRotation = value + self.rotation
 			
-			if normalObject.fill then
+			if normalObject.fill and normalObject.fill.effect then
 				normalObject.fill.effect.rotation = math.rad(self.viewRotation)
 			end
 			
@@ -172,7 +172,7 @@ end
 function quantum.newLine(...)
 	local lightLine = display.newLine(...)
 	local normalLine = display.newLine(...)
-	normalLine:setStrokeColor(0.5, 0.5, 0.5, 1.0) -- Normal vector facing up
+	normalLine:setStrokeColor(0.5, 0.5, 1.0) -- Normal vector facing up
 	
 	entangleFunction(lightLine, "append")
 	
@@ -235,11 +235,12 @@ end
 
 function quantum.newText(options)
 	options = options or {}
-	local normal = options.normal or {0.5, 0.5, 0.5, 1.0}
+	local normal = options.normal or {0.5, 0.5, 1.0}
 	
 	local lightText = display.newText(options)
 	local normalText = display.newText(options)
-	normalText:setFillColor(unpack(normal))
+	
+	normalText.fill = normal
 	
 	lightText.normalObject = normalText
 	entangleObject(lightText)

@@ -160,12 +160,39 @@ local function addPlayerCharacter()
 	local shipLight = camera:newLight({color = {1, 1, 1, 1}})
 	shipLight.x = 250
 	shipLight.y = 0
-	shipLight.z = 0.1
+	shipLight.z = 0.25
 	pCharacter:insert(shipLight)
 	
 	camera:addBody(pCharacter, "dynamic", {friction = 0.5, bounce = 0.1, density = 1, radius = 98})
 	pCharacter.angularDamping = 2
 	pCharacter.linearDamping = 0.2
+end
+
+local function addTestOther()
+	-- Text test
+	local textOptions = {
+		x = 1500,
+		y = 300,
+		font = native.systemFontBold,
+		fontSize = 60,
+		text = "This is a test!",
+		normal = {0.5, 0.5, 1},
+	}
+	local text = dynacam.newText(textOptions)
+	mapGroup:insert(text)
+	
+	-- Line test
+	local line = dynacam.newLine(0, 0, 250, 250, 1000, 1000, 1300, 1000)
+	line.strokeWidth = 10
+	line:append(2500, 2500)
+	mapGroup:insert(line)
+	
+	-- Polygon test
+	local vertices = { 0,-110, 27,-35, 105,-35, 43,16, 65,90, 0,45, -65,90, -43,15, -105,-35, -27,-35, }
+	local polygon = dynacam.newPolygon(1500, 1250, vertices)
+	polygon.fill = {type = "image", filename = FILLS[2].diffuse}
+	polygon.normal = {type = "image", filename = FILLS[2].normal}
+	mapGroup:insert(polygon)
 end
 
 local function createWorld()
@@ -175,6 +202,7 @@ local function createWorld()
 	createBackground()
 	addlights()
 	addTestSprites()
+	addTestOther()
 	addPlayerCharacter()
 end
 

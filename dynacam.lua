@@ -319,16 +319,28 @@ function dynacam.refresh()
 	vch = display.viewableContentHeight
 end
 
-function dynacam.newSprite(diffuseSheet, normalSheet, sequenceData)
-	return quantum.newSprite(diffuseSheet, normalSheet, sequenceData)
+function dynacam.newSprite(...)
+	return quantum.newSprite(...)
 end
 
-function dynacam.newRect(x, y, width, height)
-	return quantum.newRect(x, y, width, height)
+function dynacam.newRect(...)
+	return quantum.newRect(...)
 end
 
 function dynacam.newGroup()
 	return quantum.newGroup()
+end
+
+function dynacam.newText(...)
+	return quantum.newText(...)
+end
+
+function dynacam.newLine(...)
+	return quantum.newLine(...)
+end
+
+function dynacam.newPolygon(...)
+	return quantum.newPolygon(...)
 end
 
 function dynacam.newCamera(options)

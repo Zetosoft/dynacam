@@ -1,5 +1,3 @@
-local screen = require("screen")
-
 display.setDefault("isShaderCompilerVerbose", true)
 
 local kernel = {}

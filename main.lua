@@ -95,8 +95,8 @@ local function buildMap()
 	local coinSpriteSheet = {
 		sheetData = {width = 32, height = 32, numFrames = 8},
 		sequenceData = {{name = "idle", start = 1, count = 8, time = 600}},
-		diffuse = "images/test/spinning_coin_gold.png",
-		normal = "images/test/spinning_coin_gold_n.png",
+		diffuse = "images/spinning_coin_gold.png",
+		normal = "images/spinning_coin_gold_n.png",
 	}
 	local cDiffuseSheet = graphics.newImageSheet(coinSpriteSheet.diffuse, coinSpriteSheet.sheetData)
 	local cNormalSheet = graphics.newImageSheet(coinSpriteSheet.normal, coinSpriteSheet.sheetData)
@@ -125,8 +125,8 @@ local function buildMap()
 	local spriteSheet = {
 		sheetData = {width = 64, height = 64, numFrames = 2},
 		sequenceData = {{name = "idle", start = 1, count = 2, time = 500}},
-		diffuse = "images/test/powerup_health.png",
-		normal = "images/test/powerup_health_n.png",
+		diffuse = "images/powerup_health.png",
+		normal = "images/powerup_health_n.png",
 	}
 	local diffuseSheet = graphics.newImageSheet(spriteSheet.diffuse, spriteSheet.sheetData)
 	local normalSheet = graphics.newImageSheet(spriteSheet.normal, spriteSheet.sheetData)
@@ -160,8 +160,8 @@ local function buildMap()
 	mapGroup:insert(pCharacter)
 	
 	local ship = dynacam.newRect(0, 0, 256, 196)
-	ship.fill = {type = "image", filename = "images/test/spaceship_carrier_01.png"}
-	ship.normal = {type = "image", filename = "images/test/spaceship_carrier_01_n.png"}
+	ship.fill = {type = "image", filename = "images/spaceship_carrier_01.png"}
+	ship.normal = {type = "image", filename = "images/spaceship_carrier_01_n.png"}
 	ship.fill.effect = "filter.pixelate"
 	ship.fill.effect.numPixels = 8
 	transition.to(ship.fill.effect, {time = 5000, numPixels = 1,})
@@ -221,7 +221,7 @@ end
 local function initialize()
 	camera = dynacam.newCamera({debug = false})
 	camera.x = display.contentCenterX
-	camera.y = screen.contentCenterY
+	camera.y = display.contentCenterY
 	
 	physics.start()
 	physics.setGravity(0, 0)

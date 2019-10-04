@@ -69,7 +69,7 @@ local function entangleObject(lightObject)
 	lightObject:addEventListener("finalize", finalizeLightObject)
 end
 
-local function lightGroupInsert(self, lightObject)
+local function lightInsert(self, lightObject)
 	self:oldInsert(lightObject)
 	self.normalObject:insert(lightObject.normalObject)
 	
@@ -110,11 +110,141 @@ function quantum.newGroup()
 	lightGroup.normalObject = display.newGroup()
 	
 	lightGroup.oldInsert = lightGroup.insert
-	lightGroup.insert = lightGroupInsert
+	lightGroup.insert = lightInsert
 	
 	entangleObject(lightGroup)
 	
 	return lightGroup
+end
+
+function quantum.newCircle(x, y, radius)
+	local lightCircle = display.newCircle(x, y, radius)
+	local normalCircle = display.newCircle(x, y, radius)
+	
+	normalCircle.fill.effect = "filter.custom.rotate"
+	
+	lightCircle.normalObject = normalCircle
+	entangleObject(lightCircle)
+	
+	return lightCircle
+end
+
+function quantum.newContainer(width, height)
+	local lightContainer = display.newContainer(width, height)
+	lightContainer.normalObject = display.newContainer(width, height)
+	
+	lightContainer.oldInsert = lightContainer.insert
+	lightContainer.insert = lightInsert
+	
+	entangleObject(lightContainer)
+	
+	return lightContainer
+end
+
+function quantum.newImage(filename, normalFilename, baseDir)
+	baseDir = baseDir or system.ResourceDirectory
+
+	local lightImage = display.newImage(filename, baseDir)
+	local normalImage = display.newImage(normalFilename, baseDir)
+	
+	normalImage.fill.effect = "filter.custom.rotate"
+	
+	lightImage.normalObject = normalImage
+	entangleObject(lightImage)
+	
+	return lightImage
+end
+
+function quantum.newImageRect(filename, normalFilename, baseDir, width, height)
+	baseDir = baseDir or system.ResourceDirectory
+	
+	local lightImageRect = display.newImageRect(filename, baseDir, width, height)
+	local normalImageRect = display.newImageRect(normalFilename, baseDir, width, height)
+	
+	normalImageRect.fill.effect = "filter.custom.rotate"
+	
+	lightImageRect.normalObject = normalImageRect
+	entangleObject(lightImageRect)
+	
+	return lightImageRect
+end
+
+function quantum.newLine(...)
+	local lightLine = display.newLine(...)
+	local normalLine = display.newLine(...)
+	normalLine:setStrokeColor(0.5, 0.5, 0.5, 1.0) -- Normal vector facing up
+	
+	entangleFunction(lightLine, "append")
+	
+	lightLine.normalObject = normalLine
+	entangleObject(lightLine)
+	
+	return lightLine
+end
+
+function quantum.newMesh(options)
+	local lightMesh = display.newMesh(options)
+	local normalMesh = display.newMesh(options)
+	
+	normalMesh.fill.effect = "filter.custom.rotate"
+	
+	lightMesh.normalObject = normalMesh
+	entangleObject(lightMesh)
+	
+	return lightMesh
+end
+
+function quantum.newPolygon(x, y, vertices)
+	local lightPolygon = display.newPolygon(x, y, vertices)
+	local normalPolygon = display.newPolygon(x, y, vertices)
+	
+	normalPolygon.fill.effect = "filter.custom.rotate"
+	
+	lightPolygon.normalObject = normalPolygon
+	entangleObject(lightPolygon)
+	
+	return lightPolygon
+end
+
+function quantum.newRoundedRect(x, y, width, height, cornerRadius)
+	local lightRoundedRect = display.newRoundedRect(x, y, width, height, cornerRadius)
+	local normalRoundedRect = display.newRoundedRect(x, y, width, height, cornerRadius)
+	
+	normalRoundedRect.fill.effect = "filter.custom.rotate"
+	
+	lightRoundedRect.normalObject = normalRoundedRect
+	entangleObject(lightRoundedRect)
+	
+	return lightRoundedRect
+end
+
+function quantum.newSnapshot(width, height)
+	local lightSnapshot = display.newSnapshot(width, height)
+	local normalSnapshot = display.newSnapshot(width, height)
+	
+	lightSnapshot.oldInsert = lightSnapshot.insert
+	lightSnapshot.insert = lightInsert
+	
+	entangleFunction(lightSnapshot, "invalidate")
+	
+	lightSnapshot.normalObject = normalSnapshot
+	entangleObject(lightSnapshot)
+	
+	return lightSnapshot
+end
+
+function quantum.newText(options)
+	options = options or {}
+	local normal = options.normal or {0.5, 0.5, 0.5, 1.0}
+	
+	local lightText = display.newText(options)
+	local normalText = display.newText(options)
+	normalText:setFillColor(unpack(normal))
+	
+	lightText.normalObject = normalText
+	entangleObject(lightText)
+	
+	return lightText
 end
 
 function quantum.newRect(x, y, width, height)
@@ -132,11 +262,6 @@ end
 function quantum.newSprite(diffuseSheet, normalSheet, sequenceData)
 	local lightSprite = display.newSprite(diffuseSheet, sequenceData)
 	local normalSprite = display.newSprite(normalSheet, sequenceData)
-	
-	lightSprite.oldPlay = lightSprite.play
-	lightSprite.oldPause = lightSprite.pause
-	lightSprite.oldSetFrame = lightSprite.setFrame
-	lightSprite.oldSetSequence = lightSprite.setSequence
 	
 	entangleFunction(lightSprite, "play")
 	entangleFunction(lightSprite, "pause")

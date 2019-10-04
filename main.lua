@@ -228,10 +228,19 @@ local function addTestOther()
 	roundedRect.normal = {type = "image", filename = FILLS[2].normal}
 	mapGroup:insert(roundedRect)
 	
+	-- Container
+	local container = dynacam.newContainer(200, 200)
+	container.x = 2750
+	container.y = 1500
+	mapGroup:insert(container)
+	
 	-- newImage
+	local containerShip = dynacam.newImage("images/spaceship_carrier_02.png", "images/spaceship_carrier_02_n.png")
+	container:insert(containerShip)
+	
 	local otherShip = dynacam.newImage("images/spaceship_carrier_02.png", "images/spaceship_carrier_02_n.png")
 	otherShip.x = 2750
-	otherShip.y = 1500
+	otherShip.y = 1250
 	mapGroup:insert(otherShip)
 end
 

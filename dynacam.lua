@@ -9,6 +9,7 @@ require(requirePath.."shaders.apply")
 require(requirePath.."shaders.light")
 
 local quantum = require(requirePath.."quantum")
+local physics = require("physics")
 
 local dynacam = {}
 ---------------------------------------------- Variables
@@ -162,8 +163,10 @@ local function cameraEnterFrame(self, event)
 	self.lightBuffer:invalidate({accumulate = false})
 	
 	-- Handle physics bodies
-	for pIndex = 1, #self.bodies do
-		
+	for bIndex = 1, #self.bodies do
+		self.bodies[bIndex].normalObject.x = self.bodies[bIndex].x
+		self.bodies[bIndex].normalObject.y = self.bodies[bIndex].y
+		self.bodies[bIndex].rotation = self.bodies[bIndex].rotation -- This will propagate changes to normal object
 	end
 end
 
@@ -262,8 +265,47 @@ local function finalizeCamera(event)
 	end
 end
 
+local function removeObjectFromTable(table, object) -- TODO: could be outside?
+	if table and "table" == type(table) then
+		for index = #table, 1, -1 do
+			if item == table[index] then
+				tableRemove(table, index) -- Used as it re indexes table
+				return true
+			end
+		end
+	end
+	return
+end
+
+local function finalizeCameraBody(event) -- Physics
+	local body = event.target
+	local camera = body.camera
+	
+	removeObjectFromTable(camera.bodies, body)
+end
+
+local function finalizeCameraLight(event)
+	local light = event.target
+	local camera = light.camera
+	
+	removeObjectFromTable(camera.lights, light)
+end
+
+local function cameraAddBody(self, object, ...)
+	if physics.addBody(object, ...) then
+		object:addEventListener("finalize", finalizeCameraBody)
+		
+		self.bodies[#self.bodies + 1] = object
+		
+		return true
+	end
+	return false
+end
+
 local function cameraNewLight(self, options)
 	local light = quantum.newLight(options)
+	light.camera = self
+	light:addEventListener("finalize", finalizeCameraLight)
 	
 	self.lights[#self.lights + 1] = light
 	
@@ -358,6 +400,7 @@ function dynacam.newCamera(options)
 	
 	camera.debug = options.debug
 	camera.newLight = cameraNewLight
+	camera.addBody = cameraAddBody
 
 	camera:addEventListener("finalize", finalizeCamera)
 	

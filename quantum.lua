@@ -52,6 +52,7 @@ local entangleMetatable = {
 	end,
 }
 ---------------------------------------------- Caches
+local tableRemove = table.remove
 ---------------------------------------------- Constants
 ---------------------------------------------- Local functions
 local function finalizeLightObject(event)
@@ -85,7 +86,7 @@ local function entangleFunction(object, functionIndex)
 	end
 end
 ---------------------------------------------- Module functions
-function quantum.newLight(self, options)
+function quantum.newLight(options)
 	options = options or {}
 	
 	local color = options.color or {1, 1, 1, 1}

@@ -1,3 +1,4 @@
+require("mobdebug").start()
 ----------------------------------------------- Demo game - Basilio Germán
 local physics = require("physics")
 local dynacam = require("dynacam")
@@ -107,16 +108,10 @@ local function buildMap()
 	cSprite:setSequence("idle")
 	cSprite:play()
 	mapGroup:insert(cSprite)
-	physics.addBody(cSprite, "dynamic", {friction = 0.5, bounce = 0.1, density = 1})
+	camera:addBody(cSprite, "dynamic", {friction = 0.5, bounce = 0.1, density = 1})
 	cSprite.angularDamping = 0.2
 	cSprite.linearDamping = 0.2
 	
-	Runtime:addEventListener("enterFrame", function(event)
-		cSprite.normalObject.x = cSprite.x
-		cSprite.normalObject.y = cSprite.y
-		cSprite.rotation = cSprite.rotation -- This will propagate changes to normal object
-	end)
-
 	-- Test sprite health box
 	local spriteGroup = dynacam.newGroup()
 	spriteGroup.x = 1000
@@ -143,15 +138,9 @@ local function buildMap()
 	spriteGroup:insert(healthLight)
 	
 	mapGroup:insert(spriteGroup)
-	physics.addBody(spriteGroup, "dynamic", {friction = 0.5, bounce = 0.1, density = 1, box = {halfWidth = 32, halfHeight = 32}})
+	camera:addBody(spriteGroup, "dynamic", {friction = 0.5, bounce = 0.1, density = 1, box = {halfWidth = 32, halfHeight = 32}})
 	spriteGroup.angularDamping = 0.2
 	spriteGroup.linearDamping = 0.2
-	
-	Runtime:addEventListener("enterFrame", function(event)
-		spriteGroup.normalObject.x = spriteGroup.x
-		spriteGroup.normalObject.y = spriteGroup.y
-		spriteGroup.rotation = spriteGroup.rotation -- This will propagate changes to normal object
-	end)
 	
 	-- Player Character
 	pCharacter = dynacam.newGroup()
@@ -174,15 +163,9 @@ local function buildMap()
 	shipLight.z = 0.1
 	pCharacter:insert(shipLight)
 	
-	physics.addBody(pCharacter, "dynamic", {friction = 0.5, bounce = 0.1, density = 1, radius = 98})
+	camera:addBody(pCharacter, "dynamic", {friction = 0.5, bounce = 0.1, density = 1, radius = 98})
 	pCharacter.angularDamping = 2
 	pCharacter.linearDamping = 0.2
-	
-	Runtime:addEventListener("enterFrame", function(event)
-		pCharacter.normalObject.x = pCharacter.x
-		pCharacter.normalObject.y = pCharacter.y
-		pCharacter.rotation = pCharacter.rotation -- This will propagate changes to normal object
-	end)
 end
 
 local function startGame()

@@ -17,19 +17,21 @@ local dynacam = setmetatable({}, { -- Quantum provides object creation
 	end,
 })
 ---------------------------------------------- Variables
-local targetRotation, focusAngle
-local otherRotationX, otherRotationY
-local rotationX, rotationY
+local targetRotation
 local finalX, finalY
+local radAngle
+local focusRotationX, focusRotationY
+local rotationX, rotationY
 ---------------------------------------------- Constants
-local RADIANS_MAGIC = 0.0174532925 -- Used to convert degrees to radians (pi / 180)
-
+local RADIANS_MAGIC = math.pi / 180 -- Used to convert degrees to radians
 local DEFAULT_ATTENUATION = {0.4, 3, 20}
 ---------------------------------------------- Cache
 local mathAbs = math.abs
 local mathHuge = math.huge
 local mathCos = math.cos
 local mathSin = math.sin
+
+local tableRemove = table.remove
 
 local ccx = display.contentCenterX
 local ccy = display.contentCenterY
@@ -61,16 +63,20 @@ local function cameraSetZoom(self, zoomLevel, zoomDelay, zoomTime, onComplete)
 	
 	transition.cancel(self)
 	if zoomDelay <= 0 and zoomTime <= 0 then
-		self.xScale = zoomLevel
-		self.yScale = zoomLevel
-		self.x = self.values.x + display.viewableContentWidth * targetScale
-		self.y = self.values.y + display.viewableContentHeight * targetScale
+		self.diffuseView.xScale = zoomLevel
+		self.diffuseView.yScale = zoomLevel
+		
+		self.diffuseView.x = vcw * targetScale
+		self.diffuseView.y = vch * targetScale
 		
 		if onComplete then
 			onComplete()
 		end
 	else
-		transition.to(self, {xScale = zoomLevel, yScale = zoomLevel, x = self.values.x + vcw * targetScale, y = self.values.y + vch * targetScale, time = zoomTime, delay = zoomDelay, transition = easing.inOutQuad, onComplete = onComplete})
+		local x = vcw * targetScale
+		local y = vch * targetScale
+		
+		transition.to(self.diffuseView, {xScale = zoomLevel, yScale = zoomLevel, x = x, y = y, time = zoomTime, delay = zoomDelay, transition = easing.inOutQuad, onComplete = onComplete})
 	end
 end
 
@@ -80,47 +86,48 @@ end
 
 local function cameraEnterFrame(self, event)
 	-- Handle damping
-	if self.values.prevDamping ~= self.damping then
-		self.values.prevDamping = self.damping
-		self.values.damping = 1 / self.damping
+	if self.values.prevDamping ~= self.values.damping then -- Damping changed
+		self.values.prevDamping = self.values.damping
+		self.values.dampingRatio = 1 / self.values.damping
 	end
 	
 	-- Handle focus
 	if self.values.focus then
-		self.scrollX, self.scrollY = self.diffuseView.x, self.diffuseView.y
-					
 		targetRotation = self.values.trackRotation and -self.values.focus.rotation or self.values.defaultRotation
 		
-		self.diffuseView.rotation = (self.diffuseView.rotation - (self.diffuseView.rotation - targetRotation) * self.values.damping)
-
-		focusAngle = self.diffuseView.rotation * RADIANS_MAGIC
+		-- Damp and apply rotation
+		self.diffuseView.rotation = (self.diffuseView.rotation - (self.diffuseView.rotation - targetRotation) * self.values.dampingRatio)
+		self.normalView.rotation = self.diffuseView.rotation
 		
-		self.values.targetX = (self.values.targetX - (self.values.targetX - (self.values.focus.x)) * self.values.damping)
-		self.values.targetY = (self.values.targetY - (self.values.targetY - (self.values.focus.y)) * self.values.damping)
+		-- Damp x and y
+		self.values.currentX = (self.values.currentX - (self.values.currentX - (self.values.focus.x)) * self.values.dampingRatio)
+		self.values.currentY = (self.values.currentY - (self.values.currentY - (self.values.focus.y)) * self.values.dampingRatio)
 								
-		self.values.targetX = self.values.x1 < self.values.targetX and self.values.targetX or self.values.x1
-		self.values.targetX = self.values.x2 > self.values.targetX and self.values.targetX or self.values.x2
+		-- Boundary checker TODO: support scale
+		self.values.currentX = self.values.minX < self.values.currentX and self.values.currentX or self.values.minX
+		self.values.currentX = self.values.maxX > self.values.currentX and self.values.currentX or self.values.maxX
+		self.values.currentY = self.values.minY < self.values.currentY and self.values.currentY or self.values.minY
+		self.values.currentY = self.values.maxY > self.values.currentY and self.values.currentY or self.values.maxY
 		
-		self.values.targetY = self.values.y1 < self.values.targetY and self.values.targetY or self.values.y1
-		self.values.targetY = self.values.y2 > self.values.targetY and self.values.targetY or self.values.y2
+		-- Transform and calculate final position
+		radAngle = self.diffuseView.rotation * RADIANS_MAGIC -- Faster convert to radians
+		focusRotationX = mathSin(radAngle) * self.values.currentY
+		rotationX = mathCos(radAngle) * self.values.currentX
+		finalX = -rotationX + focusRotationX
 		
-		otherRotationX = mathSin(focusAngle) * self.values.targetY
-		rotationX = mathCos(focusAngle) * self.values.targetX
-		finalX = -rotationX + otherRotationX
+		focusRotationY = mathCos(radAngle) * self.values.currentY
+		rotationY = mathSin(radAngle) * self.values.currentX
+		finalY = -rotationY - focusRotationY
 		
-		otherRotationY = mathCos(focusAngle) * self.values.targetY
-		rotationY = mathSin(focusAngle) * self.values.targetX
-		finalY = -rotationY - otherRotationY
-		
+		-- Apply x and y
 		self.diffuseView.x = finalX
 		self.diffuseView.y = finalY
 		
 		-- Replicate transforms on normalView
 		self.normalView.x = self.diffuseView.x
 		self.normalView.y = self.diffuseView.y
-		self.normalView.rotation = self.diffuseView.rotation
 		
-		-- Update rotation on all normals
+		-- Update rotation on all children
 		if self.values.trackRotation then
 			if (self.diffuseView.rotation - (self.diffuseView.rotation % 1)) ~= (targetRotation - (targetRotation % 1)) then
 				for cIndex = 1, self.diffuseView.numChildren do
@@ -190,46 +197,26 @@ local function cameraStop(self)
 	end
 end
 
-local function cameraSetBounds(self, x1, x2, y1, y2)
-	x1 = x1 or -mathHuge
-	x2 = x2 or mathHuge
-	y1 = y1 or -mathHuge
-	y2 = y2 or mathHuge
+local function cameraSetBounds(self, minX, maxX, minY, maxY)
+	minX = minX or -mathHuge
+	maxX = maxX or mathHuge
+	minY = minY or -mathHuge
+	maxY = maxY or mathHuge
 	
-	if "boolean" == type(x1)  or x1 == nil then -- Reset camera bounds
-		self.values.x1, self.values.x2, self.values.y1, self.values.y2 = -mathHuge, mathHuge, -mathHuge, mathHuge
+	if "boolean" == type(minX)  or minX == nil then -- Reset camera bounds
+		self.values.minX, self.values.maxX, self.values.minY, self.values.maxY = -mathHuge, mathHuge, -mathHuge, mathHuge
 	else
-		self.values.x1, self.values.x2, self.values.y1, self.values.y2 = x1, x2, y1, y2
-	end
-end
-
-local function cameraSetPosition(self, x, y)
-	self.values.x = x
-	self.values.y = y
-	self.x = x
-	self.y = y
-end
-
-local function cameraPlaySound(self, soundID, x, y) -- TODO could add zoom precision
-	local leftX = self.values.targetX - vcw * 0.5
-	local rightX = self.values.targetX + vcw * 0.5
-	
-	local topY = self.values.targetY - vch * 0.5
-	local bottomY = self.values.targetY + vch * 0.5
-	
-	if x > leftX and x < rightX then
-		if y < topY and y > bottomY then
-			sound.play(soundID)
-		end
+		self.values.minX, self.values.maxX, self.values.minY, self.values.maxY = minX, maxX, minY, maxY
 	end
 end
 
 local function cameraToPoint(self, x, y, options)
-	x = x or ccx
-	y = y or ccy
+	local tempFocus = {
+		x = x or ccx,
+		y = y or ccy
+	}
 	
 	self:stop()
-	local tempFocus = {x = x, y = y}
 	self:setFocus(tempFocus, options)
 	self:start()
 	
@@ -242,15 +229,16 @@ end
 
 local function cameraSetFocus(self, object, options)
 	options = options or {}
+	
 	local trackRotation = options.trackRotation
 	local soft = options.soft
 	
-	if object and object.x and object.y and self.values.focus ~= object then
+	if object and object.x and object.y and self.values.focus ~= object then -- Valid object and is not in focus
 		self.values.focus = object
 		
 		if not soft then
-			self.values.targetX = object.x
-			self.values.targetY = object.y
+			self.values.currentX = object.x
+			self.values.currentY = object.y
 		end
 	else
 		self.values.focus = nil
@@ -271,10 +259,10 @@ local function finalizeCamera(event)
 	end
 end
 
-local function removeObjectFromTable(table, object) -- TODO: could be outside?
+local function removeObjectFromTable(table, object)
 	if table and "table" == type(table) then
 		for index = #table, 1, -1 do
-			if item == table[index] then
+			if object == table[index] then
 				tableRemove(table, index) -- Used as it re indexes table
 				return true
 			end
@@ -309,7 +297,7 @@ local function cameraAddBody(self, object, ...)
 end
 
 local function cameraNewLight(self, options)
-	if self.debug then
+	if self.values.debug then
 		options.debug = true
 	end
 	
@@ -332,26 +320,38 @@ end
 function dynacam.newCamera(options)
 	options = options or {}
 	
+	local damping = options.damping or 10
+	local zoomMultiplier = options.zoomMultiplier or 1
+	local defaultRotation = options.rotation or 0
+	
 	local camera = display.newGroup()
-	camera.scrollX = options.x or 0
-	camera.scrollY = options.y or 0
-	camera.damping = options.damping or 10
 	
 	camera.values = {
-		x1 = -mathHuge,
-		x2 = mathHuge,
-		y1 = -mathHuge,
-		y2 = mathHuge,
-		prevDamping = options.damping or 10,
-		damping = 0.1,
+		-- Camera Limits
+		minX = -mathHuge,
+		maxX = mathHuge,
+		minY = -mathHuge,
+		maxY = mathHuge,
+		
+		-- Damping
+		damping = damping, -- Can be used to transition
+		prevDamping = damping, -- Used to check damping changes
+		dampingRatio = 1 / damping, -- Actual value used, pre divide
+		
+		-- Zoom
 		zoom = options.zoom or 1,
 		zoomMultiplier = options.zoomMultiplier or 1,
-		defaultRotation = options.defaultRotation or 0,
-		x = options.x or 0,
-		y = options.y or 0,
 		
+		-- Transform
+		defaultRotation = options.defaultRotation or 0, -- Default camera rotation, acts like `.rotation`, can be used to rotate all camera
+		
+		currentX = 0, -- These are internally updated
+		currentY = 0,
+		
+		-- Flags
 		trackRotation = false,
 		isTracking = false,
+		debug = options.debug,
 	}
 	
 	camera.diffuseView = display.newGroup()
@@ -392,16 +392,14 @@ function dynacam.newCamera(options)
 	camera.start = cameraStart
 	camera.stop = cameraStop
 	camera.setBounds = cameraSetBounds
-	camera.setPosition = cameraSetPosition
-	camera.playSound = cameraPlaySound
-	camera.toPoint = cameraToPoint
-	camera.removeFocus = cameraRemoveFocus
-	camera.setFocus = cameraSetFocus
 	
-	camera.debug = options.debug
+	camera.setFocus = cameraSetFocus
+	camera.removeFocus = cameraRemoveFocus
+	camera.toPoint = cameraToPoint
+	
 	camera.newLight = cameraNewLight
 	camera.addBody = cameraAddBody
-
+	
 	camera:addEventListener("finalize", finalizeCamera)
 	
 	return camera

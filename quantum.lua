@@ -1,6 +1,9 @@
 ---------------------------------------------- Quantum - Light object creation - Basilio Germán
 local quantum = {}
----------------------------------------------- Variables
+---------------------------------------------- Constants
+local DEFAULT_ATTENUATION = {0.4, 3, 20}
+local DEFAULT_COLOR = {1, 1, 1, 1}
+local DEFAULT_Z = 0.2
 ---------------------------------------------- Metatables
 local meshPathEntangleMetatable = { -- used to intercept mesh path functions and replicate to normal
 	__index = function(self, index)
@@ -86,6 +89,8 @@ local tableRemove = table.remove
 local function finalizeLightObject(event)
 	local lightObject = event.target
 	display.remove(lightObject.normalObject)
+	
+	lightObject.normalObject = nil
 end
 
 local function entangleFunction(object, functionIndex)
@@ -130,7 +135,9 @@ end
 function quantum.newLight(options) -- Only meant to be used internally by dynacam, or will fail to be updated
 	options = options or {}
 	
-	local color = options.color or {1, 1, 1, 1}
+	local z = options.z or DEFAULT_Z
+	local color = options.color or DEFAULT_COLOR
+	local attenuationFactors = options.attenuationFactors or DEFAULT_ATTENUATION
 	
 	local light = display.newGroup()
 	light.normalObject = display.newGroup()
@@ -141,8 +148,9 @@ function quantum.newLight(options) -- Only meant to be used internally by dynaca
 	
 	entangleObject(light)
 	
-	light.position = {0, 0, 0.2} -- Auto updates for fast shader data pass
-	light.z = 0.2
+	light.position = {0, 0, z} -- Internal table, auto updates for fast shader data pass
+	light.z = z
+	light.attenuationFactors = attenuationFactors
 	light.color = color
 	
 	return light

@@ -250,16 +250,18 @@ local function createWorld()
 	
 	createBackground()
 	addlights()
-	addTestSprites()
 	addTestOther()
+	addTestSprites()
 	addPlayerCharacter()
 end
 
 local function startGame()
 	camera:start()
 	camera:add(mapGroup)
-	camera:setFocus(pCharacter, {trackRotation = false}) -- TODO: must support rotation of lights!
+	camera:setFocus(pCharacter, {trackRotation = false})
 	
+--	camera:setZoom(2) -- TODO: fix zoom
+	 
 	local counter = 0
 	Runtime:addEventListener("enterFrame", function()
 		counter = (counter + 1) % (360 * 4)

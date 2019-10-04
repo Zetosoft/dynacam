@@ -14,5 +14,5 @@ Dynamic lighting camera system
 	    - Returns new lightGroup
 
 ---
-Copyright (c) 2014-2016, Basilio Germán
+Copyright (c) 2019, Basilio Germán
 All rights reserved.

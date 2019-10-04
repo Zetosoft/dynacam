@@ -8,6 +8,8 @@ require(requirePath.."shaders.rotate")
 require(requirePath.."shaders.apply")
 require(requirePath.."shaders.light")
 
+local quantum = require(requirePath.."quantum")
+
 local dynacam = {}
 ---------------------------------------------- Variables
 local targetRotation, focusAngle
@@ -30,56 +32,7 @@ local vch = display.viewableContentHeight
 local display = display
 local easing = easing
 local transition = transition
----------------------------------------------- Metatables
-local entangleMetatable = {
-	__index = function(self, index)
-		if index == "parentRotation" then
-			return self.parent.viewRotation -- Will be nil once we hit normal objects in hierarchy
-		end
-		return self._oldMeta.__index(self, index)
-	end,
-	__newindex = function(self, index, value)
-		local normalObject = self.normalObject
-		if index == "normal" then
-			if normalObject.fill then
-				normalObject.fill = value
-				normalObject.fill.effect = "filter.custom.rotate"
-				normalObject.fill.effect.rotation = math.rad(self.viewRotation)
-			end
-		elseif index == "parentRotation" then -- Parent is telling us to update our view rotation 
-			self.viewRotation = value + self.rotation
-			
-			if normalObject.fill then
-				normalObject.fill.effect.rotation = math.rad(self.viewRotation)
-			end
-			
-			if self.isLightGroup then
-				for cIndex = 1, self.numChildren do
-					local lightObject = self[cIndex]
-					
-					lightObject.parentRotation = self.viewRotation
-				end
-			end
-		else
-			normalObject[index] = value -- Send values to entangled pair
-			self._oldMeta.__newindex(self, index, value)
-			
-			if index == "rotation" then -- Propagate rotation change
-				-- Rotation was already set in _oldMeta
-				self.viewRotation = (self.parentRotation or 0) + value -- parentRotation can be nil
-				
-				if self.isLightGroup then
-					for cIndex = 1, self.numChildren do
-						local lightObject = self[cIndex]
-						
-						lightObject.parentRotation = self.viewRotation
-					end
-				end
-			end
-		end
-	end,
-}
----------------------------------------------- Local functions part 2
+---------------------------------------------- Local functions 
 local function cameraAdd(self, lightObject, isFocus)
 	if lightObject.normalObject then -- Only lightObjects have a normalObject property
 		if isFocus then
@@ -309,43 +262,8 @@ local function finalizeCamera(event)
 	end
 end
 
-local function finalizeLightObject(event)
-	local lightObject = event.target
-	display.remove(lightObject.normalObject)
-end
-
-local function entangleObject(lightObject)
-	lightObject.viewRotation = 0
-	
-	rawset(lightObject, "_oldMeta", getmetatable(lightObject))
-	setmetatable(lightObject, entangleMetatable)
-	
-	lightObject:addEventListener("finalize", finalizeLightObject)
-end
-
-local function lightGroupInsert(self, lightObject)
-	self:oldInsert(lightObject)
-	self.normalObject:insert(lightObject.normalObject)
-	
-	lightObject.parentRotation = self.viewRotation -- Let metatable update efefct
-end
-
 local function cameraNewLight(self, options)
-	options = options or {}
-	
-	local color = options.color or {1, 1, 1, 1}
-	
-	local light = display.newGroup()
-	light.normalObject = display.newGroup()
-	
-	display.newCircle(light, 0, 0, 5) -- Debug view
-	
-	entangleObject(light)
-	
-	light.position = {0, 0, 0.2} -- Auto updates for fast shader data pass
-	light.z = 0.2
-	light.color = color
-	light.isLight = true
+	local light = quantum.newLight(options)
 	
 	self.lights[#self.lights + 1] = light
 	
@@ -360,40 +278,7 @@ function dynacam.refresh()
 end
 
 function dynacam.newSprite(diffuseSheet, normalSheet, sequenceData)
-	local diffuseSprite = display.newSprite(diffuseSheet, sequenceData)
-	local normalSprite = display.newSprite(normalSheet, sequenceData)
-	
-	diffuseSprite.oldPlay = diffuseSprite.play
-	diffuseSprite.oldPause = diffuseSprite.pause
-	diffuseSprite.oldSetFrame = diffuseSprite.setFrame
-	diffuseSprite.oldSetSequence = diffuseSprite.setSequence
-	
-	diffuseSprite.play = function(self, ...)
-		self:oldPlay(...)
-		self.normalObject:play(...)
-	end
-	
-	diffuseSprite.pause = function(self, ...)
-		self:oldPause(...)
-		self.normalObject:pause(...)
-	end
-	
-	diffuseSprite.setFrame = function(self, ...)
-		self:oldSetFrame(...)
-		self.normalObject:setFrame(...)
-	end
-	
-	diffuseSprite.setSequence = function(self, ...)
-		self:oldSetSequence(...)
-		self.normalObject:setSequence(...)
-	end
-	
-	normalSprite.fill.effect = "filter.custom.rotate"
-	
-	diffuseSprite.normalObject = normalSprite
-	entangleObject(diffuseSprite)
-	
-	return diffuseSprite
+	return quantum.newSprite(diffuseSheet, normalSheet, sequenceData)
 end
 
 function dynacam.newRect(x, y, width, height)

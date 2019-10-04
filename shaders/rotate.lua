@@ -1,3 +1,4 @@
+---------------------------------------------- Rotate shader - Fixes normal vectors when object is rotated - Basilio Germán
 display.setDefault("isShaderCompilerVerbose", true)
 
 local kernel = {}

@@ -1,3 +1,4 @@
+---------------------------------------------- Apply shader - Mixes composites for final shaded result - Basilio Germán
 display.setDefault("isShaderCompilerVerbose", true)
 
 local kernel = {}

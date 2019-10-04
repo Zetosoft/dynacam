@@ -1,3 +1,4 @@
+---------------------------------------------- Light shader - Lightmap is processed for later adding on a framebuffer - Basilio Germán
 display.setDefault("isShaderCompilerVerbose", true)
 
 local kernel = {}

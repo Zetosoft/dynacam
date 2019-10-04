@@ -1,14 +1,8 @@
------------------------------------------------ Scene
-local widget = require("widget")
+----------------------------------------------- Demo game - Basilio Germán
 local physics = require("physics")
-local perspective = require("scenes.test.normals.helpers.perspective")
-local director = require("director")
-local screen = require("screen")
-
-local scene = director.newScene() 
+local dynacam = require("dynacam")
 ----------------------------------------------- Variables
 local camera
-
 
 local lightData
 
@@ -16,17 +10,24 @@ local mapGroup
 
 local pCharacter
 
-local fills = {
+local holdingKey = {
+	right = false,
+	left = false,
+	up = false,
+	down = false,
+}
+----------------------------------------------- Constants
+local FILLS = {
 	[1] = {
-		diffuse = "images/test/wall.png",
-		normal = "images/test/wall_n.png",
+		diffuse = "images/wall.png",
+		normal = "images/wall_n.png",
 	},
 	[2] = {
-		diffuse = "images/test/brick.png",
-		normal = "images/test/brick_n.png",
+		diffuse = "images/brick.png",
+		normal = "images/brick_n.png",
 	},
 }
-local map = {
+local MAP = {
 	{1,1,1,1,1,1,1,2,1,1,2,2,2,2},
 	{1,1,1,2,1,1,1,1,1,1,1,1,1,2},
 	{1,1,2,2,2,2,1,2,1,1,1,2,2,2},
@@ -38,23 +39,14 @@ local map = {
 	{2,2,2,2,1,1,1,1,1,1,2,1,1,1},
 }
 
-local DAMPING_M = 0.95 -- Damping multiplier
 local ACCELERATION = 1000
 
-local holdingKey = {
-	right = false,
-	left = false,
-	up = false,
-	down = false,
-}
-
-local keyForces = {
+local FORCES_KEY = {
 	right = {torque = ACCELERATION * 5},
 	left = {torque = -ACCELERATION * 5},
 	up = {force = ACCELERATION},
 	down = {force = -ACCELERATION},
 }
------------------------------------------------ Constants
 ----------------------------------------------- Caches
 ----------------------------------------------- Functions
 local function keyListener(event)
@@ -69,15 +61,15 @@ end
 
 local function buildMap()
 	display.remove(mapGroup)
-	mapGroup = perspective.newGroup()
+	mapGroup = dynacam.newGroup()
 	
 	-- Tiles
 	local size = 250
-	for y = 1, #map do
-		for x = 1, #map[y] do
-			local rect = perspective.newRect(x * size, y * size, size, size)
-			rect.fill = {type = "image", filename = fills[map[y][x]].diffuse}
-			rect.normal = {type = "image", filename = fills[map[y][x]].normal}
+	for y = 1, #MAP do
+		for x = 1, #MAP[y] do
+			local rect = dynacam.newRect(x * size, y * size, size, size)
+			rect.fill = {type = "image", filename = FILLS[MAP[y][x]].diffuse}
+			rect.normal = {type = "image", filename = FILLS[MAP[y][x]].normal}
 			mapGroup:insert(rect)
 		end
 	end
@@ -109,7 +101,7 @@ local function buildMap()
 	local cDiffuseSheet = graphics.newImageSheet(coinSpriteSheet.diffuse, coinSpriteSheet.sheetData)
 	local cNormalSheet = graphics.newImageSheet(coinSpriteSheet.normal, coinSpriteSheet.sheetData)
 	
-	local cSprite = perspective.newSprite(cDiffuseSheet, cNormalSheet, coinSpriteSheet.sequenceData)
+	local cSprite = dynacam.newSprite(cDiffuseSheet, cNormalSheet, coinSpriteSheet.sequenceData)
 	cSprite.x = 800
 	cSprite.y = 300
 	cSprite:setSequence("idle")
@@ -126,7 +118,7 @@ local function buildMap()
 	end)
 
 	-- Test sprite health box
-	local spriteGroup = perspective.newGroup()
+	local spriteGroup = dynacam.newGroup()
 	spriteGroup.x = 1000
 	spriteGroup.y = 1100
 	
@@ -139,7 +131,7 @@ local function buildMap()
 	local diffuseSheet = graphics.newImageSheet(spriteSheet.diffuse, spriteSheet.sheetData)
 	local normalSheet = graphics.newImageSheet(spriteSheet.normal, spriteSheet.sheetData)
 	
-	local sprite = perspective.newSprite(diffuseSheet, normalSheet, spriteSheet.sequenceData)
+	local sprite = dynacam.newSprite(diffuseSheet, normalSheet, spriteSheet.sequenceData)
 	sprite:setSequence("idle")
 	sprite:play()
 	spriteGroup:insert(sprite)
@@ -162,12 +154,12 @@ local function buildMap()
 	end)
 	
 	-- Player Character
-	pCharacter = perspective.newGroup()
+	pCharacter = dynacam.newGroup()
 	pCharacter.x = 800
 	pCharacter.y = 800
 	mapGroup:insert(pCharacter)
 	
-	local ship = perspective.newRect(0, 0, 256, 196)
+	local ship = dynacam.newRect(0, 0, 256, 196)
 	ship.fill = {type = "image", filename = "images/test/spaceship_carrier_01.png"}
 	ship.normal = {type = "image", filename = "images/test/spaceship_carrier_01_n.png"}
 	ship.fill.effect = "filter.pixelate"
@@ -193,7 +185,7 @@ local function buildMap()
 	end)
 end
 
-local function test()
+local function startGame()
 	camera:start()
 	camera:add(mapGroup)
 	camera:setFocus(pCharacter, {trackRotation = true}) -- TODO: must support rotation of lights!
@@ -207,7 +199,7 @@ local function test()
 		camera.lights[4].color[1] = math.cos(angle * 4)
 		
 		for key, holding in pairs(holdingKey) do
-			local force = holding and keyForces[key].force
+			local force = holding and FORCES_KEY[key].force
 			if force then
 				local fX = math.cos(math.rad(pCharacter.rotation)) * force
 				local fY = math.sin(math.rad(pCharacter.rotation)) * force
@@ -215,8 +207,8 @@ local function test()
 				pCharacter:applyForce(fX, fY, pCharacter.x, pCharacter.y)
 			end
 			
-			if holding and keyForces[key].torque then
-				pCharacter:applyTorque(keyForces[key].torque)
+			if holding and FORCES_KEY[key].torque then
+				pCharacter:applyTorque(FORCES_KEY[key].torque)
 			end
 		end
 	end)
@@ -226,9 +218,10 @@ local function cleanUp()
 	camera:stop()
 end
 
-local function initialize(event)
-	event = event or {}
-	local params = event.params or {}
+local function initialize()
+	camera = dynacam.newCamera({debug = false})
+	camera.x = display.contentCenterX
+	camera.y = screen.contentCenterY
 	
 	physics.start()
 	physics.setGravity(0, 0)
@@ -245,45 +238,6 @@ local function initialize(event)
 	Runtime:addEventListener("key", keyListener)
 end
 ----------------------------------------------- Module functions 
-function scene:create(event)
-	local sceneView = self.view
-	
-	camera = perspective.newCamera({debug = false})
-	camera.x = screen.centerX
-	camera.y = screen.centerY
-	sceneView:insert(camera)
-end
-
-function scene:destroy()
-	
-end
-
-function scene:show(event)
-	local phase = event.phase
-	if phase == "will" then
-		initialize(event)
-		buildMap()
-		test()
-	elseif phase == "did" then
-	
-	end
-end
-
-function scene:hide( event )
-	local sceneView = self.view
-	local phase = event.phase
-	
-	if phase == "will" then
-	
-	elseif phase == "did" then
-		cleanUp()
-	end
-end
-
------------------------------------------------ Execution
-scene:addEventListener("create")
-scene:addEventListener("destroy")
-scene:addEventListener("hide")
-scene:addEventListener("show")
-
-return scene
+initialize(event)
+buildMap()
+startGame()

@@ -4,9 +4,6 @@ local sceneName = sceneParams.name or sceneParams
 local requirePath = sceneParams.path or ""
 local projectPath = string.gsub(requirePath, "%.", "/")
 
-local screen = require("screen")
-local sound = require("sound")
-
 require(requirePath.."shaders.rotate")
 require(requirePath.."shaders.apply")
 require(requirePath.."shaders.light")
@@ -193,11 +190,11 @@ local function cameraEnterFrame(self, event)
 		
 		local x, y = light:localToContent(0, 0)
 		
-		light.position[1] = (x) / screen.width + 0.5
-		light.position[2] = (y) / screen.height + 0.5
+		light.position[1] = (x) / vcw + 0.5
+		light.position[2] = (y) / vch + 0.5
 		light.position[3] = light.z
 		
-		local lightDrawer = display.newRect(0, 0, screen.width, screen.height)
+		local lightDrawer = display.newRect(0, 0, vcw, vch)
 		lightDrawer.fill = {type = "image", filename = self.normalBuffer.filename, baseDir = self.normalBuffer.baseDir}
 		lightDrawer.fill.blendMode = "add"
 		lightDrawer.fill.effect = "filter.custom.light"
@@ -454,17 +451,16 @@ function dynacam.newCamera(options)
 	camera.normalView = display.newGroup()
 	
 	-- Frame buffers
-	-- TODO: could remove screen dependency here!
-	camera.diffuseBuffer = graphics.newTexture({type = "canvas", width = screen.width, height = screen.height})
-	camera.normalBuffer = graphics.newTexture({type = "canvas", width = screen.width, height = screen.height})
-	camera.lightBuffer = graphics.newTexture({type = "canvas", width = screen.width, height = screen.height})
+	camera.diffuseBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch})
+	camera.normalBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch})
+	camera.lightBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch})
 	
 	camera.bodies = {}
 	camera.lights = {}
 	camera.lightDrawers = {}
 	
 	-- Canvas - this is what is actually shown
-	local canvas = display.newRect(0, 0, screen.width, screen.height)
+	local canvas = display.newRect(0, 0, vcw, vch)
 	canvas.fill = {
 		type = "composite",
 		paint1 = {type = "image", filename = camera.diffuseBuffer.filename, baseDir = camera.diffuseBuffer.baseDir},

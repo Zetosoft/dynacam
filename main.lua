@@ -157,13 +157,13 @@ local function addPlayerCharacter()
 	pCharacter:insert(ship)
 	pCharacter.ship = ship
 	
-	local shipLight = camera:newLight({color = {1, 1, 1, 1}})
-	shipLight.x = 250
+	local shipLight = camera:newLight({color = {0.5, 1, 0.5, 1}})
+	shipLight.x = 350
 	shipLight.y = 0
-	shipLight.z = 0.25
+	shipLight.z = 0.2
 	pCharacter:insert(shipLight)
 	
-	camera:addBody(pCharacter, "dynamic", {friction = 0.5, bounce = 0.1, density = 1, radius = 98})
+	camera:addBody(pCharacter, "dynamic", {friction = 0.5, bounce = 0.1, density = 1, box = {halfWidth = 120, halfHeight = 64}})
 	pCharacter.angularDamping = 2
 	pCharacter.linearDamping = 0.2
 end

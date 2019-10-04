@@ -181,6 +181,22 @@ local function addTestOther()
 	local text = dynacam.newText(textOptions)
 	mapGroup:insert(text)
 	
+	-- Mesh test
+	local mesh = dynacam.newMesh({
+		x = 0,
+		y = 0,
+		mode = "fan",
+		vertices = {
+			200,0, 0,0, 0,400, 400,400, 400,0
+		}
+	})
+	mesh:translate(mesh.path:getVertexOffset())  -- Translate mesh so that vertices have proper world coordinates
+	mesh.fill = {type = "image", filename = FILLS[2].diffuse}
+	mesh.normal = {type = "image", filename = FILLS[2].normal}
+	local vertexX, vertexY = mesh.path:getVertex(3)
+	mesh.path:setVertex(3, vertexX + 50, vertexY - 50)
+	mapGroup:insert(mesh)
+	
 	-- Line test
 	local line = dynacam.newLine(0, 0, 250, 250, 1000, 1000, 1300, 1000)
 	line.strokeWidth = 10

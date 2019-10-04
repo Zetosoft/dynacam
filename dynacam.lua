@@ -339,6 +339,10 @@ function dynacam.newLine(...)
 	return quantum.newLine(...)
 end
 
+function dynacam.newMesh(...)
+	return quantum.newMesh(...)
+end
+
 function dynacam.newPolygon(...)
 	return quantum.newPolygon(...)
 end

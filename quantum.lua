@@ -3,6 +3,18 @@ local quantum = {}
 ---------------------------------------------- Variables
 
 ---------------------------------------------- Metatables
+local meshPathEntangleMetatable = {
+	__index = function(self, index)
+		if index == "path" then
+			return self.pathFunctions
+		end
+		return self._oldMetaMesh.__index(self, index)
+	end,
+	__newindex = function(self, index, value)
+		self._oldMetaMesh.__newindex(self, index, value)
+	end
+}
+
 local entangleMetatable = {
 	__index = function(self, index)
 		if index == "parentRotation" then
@@ -60,8 +72,26 @@ local function finalizeLightObject(event)
 	display.remove(lightObject.normalObject)
 end
 
+local function entangleFunction(object, functionIndex)
+	local originalFunction = object[functionIndex]
+	
+	object["_"..functionIndex] = originalFunction
+	object[functionIndex] = function(self, ...)
+		self["_"..functionIndex](self, ...)
+		self.normalObject[functionIndex](self.normalObject, ...)
+	end
+end
+
 local function entangleObject(lightObject)
 	lightObject.viewRotation = 0
+	
+	entangleFunction(lightObject, "rotate")
+	entangleFunction(lightObject, "scale")
+	entangleFunction(lightObject, "setMask")
+	entangleFunction(lightObject, "toBack")
+	entangleFunction(lightObject, "toFront")
+	entangleFunction(lightObject, "translate")
+	entangleFunction(lightObject, "removeSelf")
 	
 	rawset(lightObject, "_oldMeta", getmetatable(lightObject))
 	setmetatable(lightObject, entangleMetatable)
@@ -74,16 +104,6 @@ local function lightInsert(self, lightObject)
 	self.normalObject:insert(lightObject.normalObject)
 	
 	lightObject.parentRotation = self.viewRotation -- Let metatable update efefct
-end
-
-local function entangleFunction(object, functionIndex)
-	local originalFunction = object[functionIndex]
-	
-	object["_"..functionIndex] = originalFunction
-	object[functionIndex] = function(self, ...)
-		self["_"..functionIndex](self, ...)
-		self.normalObject[functionIndex](self.normalObject, ...)
-	end
 end
 ---------------------------------------------- Module functions
 function quantum.newLight(options)
@@ -186,10 +206,36 @@ function quantum.newMesh(options)
 	local lightMesh = display.newMesh(options)
 	local normalMesh = display.newMesh(options)
 	
+	lightMesh.pathFunctions = {
+		path = lightMesh.path,
+		normalPath = normalMesh.path,
+		
+		setVertex = function(self, index, x, y)
+			self.path:setVertex(index, x, y)
+			self.normalPath:setVertex(index, x, y)
+		end,
+		getVertex = function(self, index)
+			return self.path:getVertex(index)
+		end,
+		setUV= function(self, index, u, v)
+			self.path:setUV(index, u, v)
+			self.normalPath:setUV(index, u, v)
+		end,
+		getUV = function(self, index)
+			return self.path:getUV(index)
+		end,
+		getVertexOffset = function(self)
+			return self.path:getVertexOffset()
+		end
+	}
+	
 	normalMesh.fill.effect = "filter.custom.rotate"
 	
 	lightMesh.normalObject = normalMesh
 	entangleObject(lightMesh)
+	
+	rawset(lightMesh, "_oldMetaMesh", getmetatable(lightMesh))
+	setmetatable(lightMesh, meshPathEntangleMetatable)
 	
 	return lightMesh
 end

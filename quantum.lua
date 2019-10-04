@@ -1,9 +1,8 @@
 ---------------------------------------------- Quantum - Light object creation - Basilio Germán
 local quantum = {}
 ---------------------------------------------- Variables
-
 ---------------------------------------------- Metatables
-local meshPathEntangleMetatable = {
+local meshPathEntangleMetatable = { -- used to intercept mesh path functions and replicate to normal
 	__index = function(self, index)
 		if index == "path" then
 			return self.pathFunctions
@@ -15,14 +14,12 @@ local meshPathEntangleMetatable = {
 	end
 }
 
-local fillProxyMetatable = {
+local fillProxyMetatable = { -- Used to intercept .fill transform changes and replicate to normal
 	__index = function(self, index)
 		return self.fill[index]
 	end,
 	__newindex = function(self, index, value)
-		if index == "fill" then -- Entangle metatable is setting fill reference
-			return rawset(self, index, value)
-		elseif index ~= "effect" then
+		if index ~= "effect" then
 			self.normalObject.fill[index] = value
 		end
 		
@@ -35,9 +32,9 @@ local entangleMetatable = {
 		if index == "parentRotation" then
 			return self.parent.viewRotation -- Will be nil once we hit normal objects in hierarchy
 		elseif index == "fill" then
-			self.fillProxy.fill = self._oldMeta.__index(self, index)
+			rawset(self.fillProxy, "fill", self._oldMeta.__index(self, index)) -- Update original fill reference in proxy, skipping metamethods
 			
-			return self.fillProxy
+			return self.fillProxy -- Fill proxy can now be modified
 		end
 		return self._oldMeta.__index(self, index)
 	end,
@@ -47,13 +44,13 @@ local entangleMetatable = {
 			if normalObject.fill then
 				normalObject.fill = value
 				normalObject.fill.effect = "filter.custom.rotate"
-				normalObject.fill.effect.rotation = math.rad(self.viewRotation + self.fill.rotation)
+				normalObject.fill.effect.rotation = math.rad(self.viewRotation + self.fill.rotation) -- Fill might be rotated
 			end
 		elseif index == "parentRotation" then -- Parent is telling us to update our view rotation 
 			self.viewRotation = value + self.rotation
 			
 			if normalObject.fill and normalObject.fill.effect then
-				normalObject.fill.effect.rotation = math.rad(self.viewRotation + self.fill.rotation)
+				normalObject.fill.effect.rotation = math.rad(self.viewRotation + self.fill.rotation) -- Fill might be rotated
 			end
 			
 			if self.numChildren then

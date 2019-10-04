@@ -172,7 +172,7 @@ end
 local function addTestOther()
 	-- Text test
 	local textOptions = {
-		x = 1500,
+		x = 1250,
 		y = 300,
 		font = native.systemFontBold,
 		fontSize = 60,
@@ -201,7 +201,9 @@ local function addTestOther()
 	-- Line test
 	local line = dynacam.newLine(0, 0, 250, 250, 1000, 1000, 1300, 1000)
 	line.strokeWidth = 10
-	line:append(2500, 2500)
+	line:append(2000, 2000)
+	line:append(2000, 1000)
+	line:append(1500, 250)
 	mapGroup:insert(line)
 	
 	-- Polygon test

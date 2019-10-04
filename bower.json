@@ -10,7 +10,7 @@
 		"config.lua",
 		"README.md",
 		"build.settings",
-		"images/",
+		"images/"
 	],
 	"private": true
 }

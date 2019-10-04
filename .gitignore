@@ -1,0 +1,5 @@
+.DS_Store
+dependencies/
+mobdebug.lua
+
+*.out

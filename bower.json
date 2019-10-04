@@ -1,0 +1,17 @@
+{
+	"name": "dynacam",
+	"version": "1.0",
+	"main": "dynacam.lua",
+	"dependencies": {
+
+	},
+	"ignore": [
+		"main.lua",
+		"config.lua",
+		"README.md",
+		"build.settings",
+		"images/",
+	],
+	"private": true
+}
+

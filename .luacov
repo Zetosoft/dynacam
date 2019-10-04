@@ -1,0 +1,24 @@
+return {
+  configfile = ".luacov",
+  statsfile = "luacov.stats.out",
+  reportfile = "luacov.report.out",
+  runreport = true,
+  deletestats = true,
+
+  include = {
+  },
+  
+  exclude = {
+    "busted",
+    "luarocks",
+    "say",
+    "luacov",
+    "term",
+    "luassert",
+    "mediator",
+    "pl",
+
+    "main$",
+    "spec/",
+  },
+}

@@ -25,6 +25,7 @@ local rotationX, rotationY
 ---------------------------------------------- Constants
 local RADIANS_MAGIC = math.pi / 180 -- Used to convert degrees to radians
 local DEFAULT_ATTENUATION = {0.4, 3, 20}
+local DEFAULT_AMBIENT_LIGHT = {0, 0, 0, 1}
 ---------------------------------------------- Cache
 local mathAbs = math.abs
 local mathHuge = math.huge
@@ -93,7 +94,7 @@ local function cameraEnterFrame(self, event)
 	
 	-- Handle focus
 	if self.values.focus then
-		targetRotation = self.values.trackRotation and -self.values.focus.rotation or self.values.defaultRotation
+		targetRotation = self.values.trackRotation and -self.values.focus.rotation or self.rotation
 		
 		-- Damp and apply rotation
 		self.diffuseView.rotation = (self.diffuseView.rotation - (self.diffuseView.rotation - targetRotation) * self.values.dampingRatio)
@@ -244,7 +245,6 @@ local function cameraSetFocus(self, object, options)
 		self.values.focus = nil
 	end
 	
-	self.values.defaultRotation = 0 --Reset rotation
 	if not soft then
 		self.diffuseView.rotation = 0
 		self.normalView.rotation = 0
@@ -309,6 +309,24 @@ local function cameraNewLight(self, options)
 	
 	return light
 end
+
+local function cameraSetDebug(self, value)
+	self.values.debug = value
+	
+	if value == "light" then
+		self.canvas.fill = {type = "image", filename = self.lightBuffer.filename, baseDir = self.lightBuffer.baseDir}
+	elseif value == "normal" then
+		self.canvas.fill = {type = "image", filename = self.normalBuffer.filename, baseDir = self.normalBuffer.baseDir}
+	elseif not value then
+		self.canvas.fill = self.canvas.defaultFill -- Restore saved default fill
+		self.canvas.fill.effect = "composite.custom.apply"
+		self.canvas.fill.effect.ambientLightColor = self.ambientLightColor
+	end
+	
+	for lIndex = 1, #self.lights do
+		self.lights[lIndex].debug.isVisible = value
+	end
+end
 ---------------------------------------------- Functions
 function dynacam.refresh()
 	ccx = display.contentCenterX
@@ -322,7 +340,7 @@ function dynacam.newCamera(options)
 	
 	local damping = options.damping or 10
 	local zoomMultiplier = options.zoomMultiplier or 1
-	local defaultRotation = options.rotation or 0
+	local ambientLightColor = options.ambientLightColor or DEFAULT_AMBIENT_LIGHT
 	
 	local camera = display.newGroup()
 	
@@ -333,25 +351,21 @@ function dynacam.newCamera(options)
 		minY = -mathHuge,
 		maxY = mathHuge,
 		
-		-- Damping
+		-- Damping & internal stuff
 		damping = damping, -- Can be used to transition
 		prevDamping = damping, -- Used to check damping changes
 		dampingRatio = 1 / damping, -- Actual value used, pre divide
+		currentX = 0, -- Internal
+		currentY = 0, -- Internal
 		
 		-- Zoom
 		zoom = options.zoom or 1,
 		zoomMultiplier = options.zoomMultiplier or 1,
 		
-		-- Transform
-		defaultRotation = options.defaultRotation or 0, -- Default camera rotation, acts like `.rotation`, can be used to rotate all camera
-		
-		currentX = 0, -- These are internally updated
-		currentY = 0,
-		
 		-- Flags
 		trackRotation = false,
 		isTracking = false,
-		debug = options.debug,
+		debug = false,
 	}
 	
 	camera.diffuseView = display.newGroup()
@@ -365,22 +379,18 @@ function dynacam.newCamera(options)
 	camera.bodies = {}
 	camera.lights = {}
 	camera.lightDrawers = {}
+	camera.ambientLightColor = ambientLightColor
 	
 	-- Canvas - this is what is actually shown
 	local canvas = display.newRect(0, 0, vcw, vch)
-	canvas.fill = {
+	canvas.defaultFill = { -- Save default fill
 		type = "composite",
 		paint1 = {type = "image", filename = camera.diffuseBuffer.filename, baseDir = camera.diffuseBuffer.baseDir},
 		paint2 = {type = "image", filename = camera.lightBuffer.filename, baseDir = camera.lightBuffer.baseDir}
 	}
+	canvas.fill = canvas.defaultFill
 	canvas.fill.effect = "composite.custom.apply"
-	canvas.fill.effect.ambientLightColor = {0, 0, 0, 1}
-	
-	if options.debug == "light" then
-		canvas.fill = {type = "image", filename = camera.lightBuffer.filename, baseDir = camera.lightBuffer.baseDir}
-	elseif options.debug then
-		canvas.fill = {type = "image", filename = camera.normalBuffer.filename, baseDir = camera.normalBuffer.baseDir}
-	end
+	canvas.fill.effect.ambientLightColor = ambientLightColor
 	
 	camera.canvas = canvas
 	camera:insert(camera.canvas)
@@ -397,6 +407,7 @@ function dynacam.newCamera(options)
 	camera.removeFocus = cameraRemoveFocus
 	camera.toPoint = cameraToPoint
 	
+	camera.setDebug = cameraSetDebug
 	camera.newLight = cameraNewLight
 	camera.addBody = cameraAddBody
 	

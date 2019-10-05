@@ -101,7 +101,7 @@ P_COLOR vec4 FragmentKernel(P_UV vec2 texCoord) {
 	P_COLOR vec4 lightColor = vec4(pointLightColor * diffuseIntensity, 1.0);
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////
-	#if 1 // Debug and testing
+	#if 0 // Debug and testing
 		// Adjust for resolution
 		P_UV vec2 adjustedTexCoord = vec2(texCoord);
 		adjustedTexCoord.x *= proportion;
@@ -117,7 +117,7 @@ P_COLOR vec4 FragmentKernel(P_UV vec2 texCoord) {
 
 		if (lightDistance < inner_threshold) {
 			if( pointLightPos.z >= 0.0 ) {
-				// White when in top
+				// Gray when in top
 				return vec4(0.5, 0.5, 0.5, 1.0);
 			} else {
 				// Red when behind

@@ -291,7 +291,8 @@ local function cleanUp()
 end
 
 local function initialize()
-	camera = dynacam.newCamera({debug = false})
+	camera = dynacam.newCamera({damping = 10})
+	camera:setDebug(false)
 	camera.x = display.contentCenterX
 	camera.y = display.contentCenterY
 	

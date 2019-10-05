@@ -17,18 +17,18 @@ kernel.vertexData =
 	},
 }
 kernel.fragment = [[
-P_POSITION vec2 rotate(vec2 v, float a) {
-	P_DEFAULT float s = sin(a);
-	P_DEFAULT float c = cos(a);
+P_POSITION vec2 rotate(vec2 vector, float angle) {
+	P_DEFAULT float s = sin(angle);
+	P_DEFAULT float c = cos(angle);
 	P_DEFAULT mat2 m = mat2(c, -s, s, c);
 
-	return m * v;
+	return m * vector;
 }
 
 P_COLOR vec4 FragmentKernel( P_UV vec2 texCoord ){
 	P_NORMAL vec4 normalPixel = texture2D(CoronaSampler0, texCoord);
 	
-	normalPixel.xy -= 0.5;
+	normalPixel.xy -= 0.5; // Normal vectors are aligned from the center
 	normalPixel.xy = rotate(normalPixel.xy, CoronaVertexUserData.x);
 	normalPixel.xy += 0.5;
 	

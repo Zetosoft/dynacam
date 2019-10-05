@@ -146,9 +146,8 @@ function quantum.newLight(options) -- Only meant to be used internally by dynaca
 	local light = display.newGroup()
 	light.normalObject = display.newGroup()
 	
-	if options.debug then
-		display.newCircle(light, 0, 0, 5) -- Debug view
-	end
+	light.debug = display.newCircle(light, 0, 0, 5)
+	light.debug.isVisible = options.debug
 	
 	entangleObject(light)
 	
@@ -307,6 +306,7 @@ function quantum.newSprite(diffuseSheet, normalSheet, sequenceData)
 	return quantum.newLightObject(lightSprite, normalSprite, FUNCTIONS.SPRITE)
 end
 
+-- Used internally to create lightObjects
 function quantum.newLightObject(diffuseObject, normalObject, entangleFunctions)
 	entangleFunctions = entangleFunctions or {}
 	diffuseObject.normalObject = normalObject

@@ -1,5 +1,16 @@
 settings = {
 	orientation = {
-		default = "portrait"
-	}
+		default = "landscapeRight",
+		supported = {"landscapeLeft", "landscapeRight"},
+	},
+	
+	win32 = {
+		
+	},
+	
+	window = {
+		titleText = {
+			default = "Dynacam",
+		},
+	},
 }

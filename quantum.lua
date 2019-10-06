@@ -46,6 +46,8 @@ local entangleMetatable = {
 			rawset(self.fillProxy, "fill", self._oldMeta.__index(self, index)) -- Update original fill reference in proxy, skipping metamethods
 			
 			return self.fillProxy -- Fill proxy can now be modified
+		elseif index == "normal" then
+			return self.normalObject.fill
 		end
 		return self._oldMeta.__index(self, index)
 	end,

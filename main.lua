@@ -1,6 +1,7 @@
-require("mobdebug").start()
+--require("mobdebug").start()
 ----------------------------------------------- Demo game - Basilio Germán
 local physics = require("physics")
+local widget = require("widget")
 local dynacam = require("dynacam")
 ----------------------------------------------- Variables
 local camera
@@ -18,6 +19,11 @@ local holdingKey = {
 	down = false,
 }
 ----------------------------------------------- Constants
+local CAM_PAN_LIMIT = {
+	X = display.actualContentHeight * 0.4,
+	Y = display.viewableContentHeight * 0.4,
+}
+
 local FILLS = {
 	[1] = {
 		diffuse = "images/wall.png",
@@ -86,6 +92,7 @@ local function addlights()
 		light.x = lData.position[1]
 		light.y = lData.position[2]
 		light.z = lData.position[3]
+		light.attenuationFactors = lData.attenuationFactors
 		mapGroup:insert(light)
 	end
 end
@@ -93,23 +100,39 @@ end
 local function addTestSprites()
 	 -- Test sprite coin
 	local coinSpriteSheet = {
-		sheetData = {width = 32, height = 32, numFrames = 8},
-		sequenceData = {{name = "idle", start = 1, count = 8, time = 600}},
+		sheetData = {width = 34, height = 34, numFrames = 16},
+		sequenceData = {{name = "idle", start = 1, count = 16, time = 1000}},
 		diffuse = "images/spinning_coin_gold.png",
 		normal = "images/spinning_coin_gold_n.png",
 	}
 	local cDiffuseSheet = graphics.newImageSheet(coinSpriteSheet.diffuse, coinSpriteSheet.sheetData)
 	local cNormalSheet = graphics.newImageSheet(coinSpriteSheet.normal, coinSpriteSheet.sheetData)
 	
-	local coinSprite = dynacam.newSprite(cDiffuseSheet, cNormalSheet, coinSpriteSheet.sequenceData)
-	coinSprite.x = 800
-	coinSprite.y = 300
-	coinSprite:setSequence("idle")
-	coinSprite:play()
-	mapGroup:insert(coinSprite)
-	camera:addBody(coinSprite, "dynamic", {friction = 0.5, bounce = 0.1, density = 1})
-	coinSprite.angularDamping = 0.2
-	coinSprite.linearDamping = 0.2
+	local gridSize = 10
+	for index = 1, 50 do
+		local x = index % gridSize
+		local y = math.ceil(index * (1 / gridSize))
+		
+		local coinGroup = dynacam.newGroup()
+		coinGroup.x = 1500 + (x * 100)
+		coinGroup.y = 1200 + (y * 100)
+		
+		local coinSprite = dynacam.newSprite(cDiffuseSheet, cNormalSheet, coinSpriteSheet.sequenceData)
+		coinSprite:setSequence("idle")
+		coinSprite:play()
+		coinGroup:insert(coinSprite)
+		
+		camera:addBody(coinGroup, "dynamic", {friction = 0.5, bounce = 0.1, density = 1, radius = 17})
+		coinGroup.angularDamping = 0.5
+		coinGroup.linearDamping = 0.8
+		
+		local coinLight = camera:newLight({color = {1, 0.843, 0, 0.25}})
+		coinLight.z = 0.05
+		coinLight.attenuationFactors = {1, 5, 50}
+		coinGroup:insert(coinLight)
+		
+		mapGroup:insert(coinGroup)
+	end
 	
 	-- Test sprite health box
 	local spriteGroup = dynacam.newGroup()
@@ -139,7 +162,7 @@ local function addTestSprites()
 	mapGroup:insert(spriteGroup)
 	camera:addBody(spriteGroup, "dynamic", {friction = 0.5, bounce = 0.1, density = 1, box = {halfWidth = 32, halfHeight = 32}})
 	spriteGroup.angularDamping = 0.2
-	spriteGroup.linearDamping = 0.2
+	spriteGroup.linearDamping = 0.6
 end
 
 local function addPlayerCharacter()
@@ -159,14 +182,16 @@ local function addPlayerCharacter()
 	pCharacter.ship = ship
 	
 	local shipLight = camera:newLight({color = {1, 1, 1, 1}})
-	shipLight.x = 350
+	shipLight.x = 300
 	shipLight.y = 0
-	shipLight.z = 0.1
+	shipLight.z = 0.15
+	shipLight.state = true
 	pCharacter:insert(shipLight)
+	pCharacter.shipLight = shipLight
 	
 	camera:addBody(pCharacter, "dynamic", {friction = 0.5, bounce = 0.1, density = 1, box = {halfWidth = 120, halfHeight = 64}})
 	pCharacter.angularDamping = 2
-	pCharacter.linearDamping = 0.2
+	pCharacter.linearDamping = 0.5
 end
 
 local function addTestOther()
@@ -255,10 +280,54 @@ local function createWorld()
 	addPlayerCharacter()
 end
 
+local function sliderListener(event)
+	local slider = event.target
+	local index = slider.index
+	local value = event.value
+
+	local float = (value * slider.valueScale) + slider.offset
+
+	pCharacter.shipLight.attenuationFactors[index] = float
+	
+	print(float)
+end
+
+local function createSliders()
+	if false then -- Sliders 
+		local valueScales = {
+			0.02,
+			0.05,
+			0.5,
+		}
+		
+		local offsets = {
+			0,
+			0,
+			0,
+		}
+		
+		for index = 1, 3 do
+			local slider = widget.newSlider({
+				x = display.screenOriginX + index * 50,
+				y = display.screenOriginY + display.actualContentHeight - 100,
+				orientation = "vertical",
+				height = 150,
+				value = 50,
+				listener = sliderListener
+			})
+			slider.index = index
+			slider.valueScale = valueScales[index]
+			slider.offset = offsets[index]
+		end
+	end
+end
+
 local function startGame()
 	camera:start()
 	camera:add(mapGroup)
-	camera:setFocus(pCharacter, {trackRotation = false})
+	
+	local focus = camera:toPoint(0, 0)
+	pCharacter.focus = focus
 	
 --	camera:setZoom(2) -- TODO: fix zoom
 	 
@@ -283,6 +352,23 @@ local function startGame()
 				pCharacter:applyTorque(FORCES_KEY[key].torque)
 			end
 		end
+		
+		local fX, fY = pCharacter:getLinearVelocity()
+		
+		fX = (fX > CAM_PAN_LIMIT.X) and CAM_PAN_LIMIT.X or ((fX < -CAM_PAN_LIMIT.X) and -CAM_PAN_LIMIT.X) or fX
+		fY = (fY > CAM_PAN_LIMIT.Y) and CAM_PAN_LIMIT.Y or ((fY < -CAM_PAN_LIMIT.Y) and -CAM_PAN_LIMIT.Y) or fY
+		
+		pCharacter.focus.x = pCharacter.x + fX
+		pCharacter.focus.y = pCharacter.y + fY
+	end)
+
+	Runtime:addEventListener("tap", function(event)
+		local light = pCharacter.shipLight
+		
+		light.state = not light.state
+		local intensity = light.state and 1 or 0
+		
+		light.color[4] = intensity
 	end)
 end
 
@@ -291,6 +377,8 @@ local function cleanUp()
 end
 
 local function initialize()
+	display.setStatusBar( display.HiddenStatusBar )
+	
 	camera = dynacam.newCamera({damping = 10})
 	camera:setDebug(false)
 	camera.x = display.contentCenterX
@@ -306,11 +394,17 @@ local function initialize()
 		{position = {700, 900, 0.2}, color = {1, 1, 1, 1}},
 		{position = {900, 900, 0.2}, color = {1, 1, 0, 1}},
 		{position = {0, 0, 0.2}, color = {1, 0, 1, 1}},
+		{position = {500, 2000, 0.05}, color = {0.1, 0.1, 0.1, 1}}, -- Black light?
+		{position = {2500, 800, 0.25}, color = {0, 1, 0, 1}},
+		{position = {2200, 1200, 0.15}, color = {0, 0.5, 1, 1}},
+		{position = {1400, 1800, 0.1}, color = {0, 0.5, 1, 1}},
+		{position = {3000, 2000, 0.1}, color = {1, 1, 1, 1}, attenuationFactors = {0.1, 2, 5}},
 	}
 	
 	Runtime:addEventListener("key", keyListener)
 end
 ----------------------------------------------- Module functions 
-initialize(event)
+initialize()
 createWorld()
+createSliders()
 startGame()

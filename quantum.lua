@@ -79,6 +79,14 @@ local entangleMetatable = {
 		elseif index == "camera" then
 			rawset(self, "_camera", value)
 			
+			if self.queuedListeners then
+				for lIndex = 1, #self.queuedListeners do
+					local params = self.queuedListeners[lIndex]
+					
+					-- value is `_camera`
+					value:addListenerObject(self, params.eventName, params.eventFunction) 
+				end
+			end
 			-- TODO: iterate through pending touch/tap listeners 
 			
 			if self.numChildren then
@@ -129,15 +137,13 @@ local function entangleFunction(object, functionIndex)
 end
 
 local function addEventListenerPirate(self, eventName, eventFunction) -- Metatable called function
-	if eventName == "tap" then
+	if eventName == "tap" or eventName == "touch" then
 		if self.camera then
-			print()
+			self.camera:addListenerObject(self, eventName, eventFunction)
 		else
-			print()
-			-- Must store event until camera?
+			self.queuedListeners = self.queuedListeners or {}
+			self.queuedListeners[#self.queuedListeners + 1] = {eventName = eventName, eventFunction = eventFunction}
 		end
-		print("Pirated tap add")
-		-- Create touch stuff and add to
 	end
 	return self._oldMeta.__index(self, "addEventListener")(self, eventName, eventFunction)
 end

@@ -39,6 +39,9 @@ local ccy = display.contentCenterY
 local vcw = display.viewableContentWidth
 local vch = display.viewableContentHeight
 
+local vcwr = 1 / vcw
+local vchr = 1 / vch
+
 local display = display
 local easing = easing
 local transition = transition
@@ -143,10 +146,10 @@ local function cameraEnterFrame(self, event)
 	self.diffuseBuffer:setBackground(0)
 	
 	self.diffuseBuffer:draw(self.diffuseView)
-	self.diffuseBuffer:invalidate({accumulate = false})
+	self.diffuseBuffer:invalidate({accumulate = self.values.accumulateBuffer})
 	
 	self.normalBuffer:draw(self.normalView)
-	self.normalBuffer:invalidate({accumulate = false})
+	self.normalBuffer:invalidate({accumulate = self.values.accumulateBuffer})
 	
 	-- Handle lights
 	for lIndex = 1, #self.lightDrawers do
@@ -158,8 +161,8 @@ local function cameraEnterFrame(self, event)
 		
 		local x, y = light:localToContent(0, 0)
 		
-		light.position[1] = (x) / vcw + 0.5
-		light.position[2] = (y) / vch + 0.5
+		light.position[1] = (x) * vcwr + 0.5
+		light.position[2] = (y) * vchr + 0.5
 		light.position[3] = light.z
 		
 		local lightDrawer = display.newRect(0, 0, vcw, vch)
@@ -333,6 +336,9 @@ function dynacam.refresh()
 	ccy = display.contentCenterY
 	vcw = display.viewableContentWidth
 	vch = display.viewableContentHeight
+	
+	vcwr = 1 / vcw
+	vchr = 1 / vch
 end
 
 function dynacam.newCamera(options)
@@ -363,6 +369,7 @@ function dynacam.newCamera(options)
 		zoomMultiplier = options.zoomMultiplier or 1,
 		
 		-- Flags
+		accumulateBuffer = false,
 		trackRotation = false,
 		isTracking = false,
 		debug = false,

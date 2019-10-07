@@ -1,4 +1,4 @@
---require("mobdebug").start()
+require("mobdebug").start()
 ----------------------------------------------- Demo game - Basilio Germán
 local physics = require("physics")
 local widget = require("widget")
@@ -192,6 +192,16 @@ local function addPlayerCharacter()
 	camera:addBody(pCharacter, "dynamic", {friction = 0.5, bounce = 0.1, density = 1, box = {halfWidth = 120, halfHeight = 64}})
 	pCharacter.angularDamping = 2
 	pCharacter.linearDamping = 0.5
+	
+	pCharacter.isHitTestable = true
+	pCharacter:addEventListener("tap", function(event)
+		local light = pCharacter.shipLight
+		
+		light.state = not light.state
+		local intensity = light.state and 1 or 0
+		
+		light.color[4] = intensity
+	end)
 end
 
 local function addTestOther()
@@ -201,7 +211,7 @@ local function addTestOther()
 		y = 300,
 		font = native.systemFontBold,
 		fontSize = 60,
-		text = "This is a test!",
+		text = "Dynacam test playground!",
 		normal = {0.5, 0.5, 1},
 	}
 	local text = dynacam.newText(textOptions)
@@ -223,13 +233,23 @@ local function addTestOther()
 	mesh.path:setVertex(3, vertexX + 50, vertexY - 50)
 	mapGroup:insert(mesh)
 	
-	-- Line test
-	local line = dynacam.newLine(0, 0, 250, 250, 1000, 1000, 1300, 1000)
-	line.strokeWidth = 10
+	-- Normal Line
+	local line = dynacam.newLine(0, 0, 1000, 1000)
+	line:append(1300, 1000)
 	line:append(2000, 2000)
 	line:append(2000, 1000)
 	line:append(1500, 250)
+	line.strokeWidth = 10
 	mapGroup:insert(line)
+	
+	-- Line without normal
+	local dLine = display.newLine(50, 100, 1050, 1100)
+	dLine:append(1350, 1100)
+	dLine:append(2050, 2100)
+	dLine:append(2050, 1100)
+	dLine:append(1550, 350)
+	dLine.strokeWidth = 10
+	mapGroup:oldInsert(dLine) -- Used to insert displayObjects
 	
 	-- Polygon test
 	local vertices = { 0,-110, 27,-35, 105,-35, 43,16, 65,90, 0,45, -65,90, -43,15, -105,-35, -27,-35, }
@@ -362,14 +382,14 @@ local function startGame()
 		pCharacter.focus.y = pCharacter.y + fY
 	end)
 
-	Runtime:addEventListener("tap", function(event)
-		local light = pCharacter.shipLight
+--	Runtime:addEventListener("tap", function(event)
+--		local light = pCharacter.shipLight
 		
-		light.state = not light.state
-		local intensity = light.state and 1 or 0
+--		light.state = not light.state
+--		local intensity = light.state and 1 or 0
 		
-		light.color[4] = intensity
-	end)
+--		light.color[4] = intensity
+--	end)
 end
 
 local function cleanUp()
@@ -384,10 +404,12 @@ local function initialize()
 	camera.x = display.contentCenterX
 	camera.y = display.contentCenterY
 	
+--	camera.isVisible = false
+	
 	physics.start()
 	physics.setGravity(0, 0)
 	
-	display.setDefault( "background", 1,1,1)
+--	display.setDefault( "background", 1,1,1)
 	
 	lightData = {
 		{position = {400, 400, 0.2}, color = {1, 1, 1, 1}},

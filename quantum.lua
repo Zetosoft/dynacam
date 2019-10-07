@@ -107,10 +107,10 @@ local function entangleFunction(object, functionIndex)
 	local originalFunction = object[functionIndex]
 	
 	object["_"..functionIndex] = originalFunction
-	object[functionIndex] = function(self, ...)
+	rawset(object, functionIndex, function(self, ...)
 		self["_"..functionIndex](self, ...)
 		self.normalObject[functionIndex](self.normalObject, ...)
-	end
+	end)
 end
 
 local function entangleObject(lightObject)

@@ -21,6 +21,12 @@ kernel.vertexData =
 		type = "scalar",
 		index = 1, -- CoronaVertexUserData.y
 	},
+	{
+		name = "yMult",
+		default = 1,
+		type = "scalar",
+		index = 2, -- CoronaVertexUserData.z
+	},
 }
 kernel.fragment = [[
 P_POSITION vec2 rotate(vec2 vector, float angle) {
@@ -36,6 +42,7 @@ P_COLOR vec4 FragmentKernel( P_UV vec2 texCoord ){
 	
 	normalPixel.xy -= 0.5; // Normal vectors are aligned from the center
 	normalPixel.x *= CoronaVertexUserData.y;
+	normalPixel.y *= CoronaVertexUserData.z;
 	normalPixel.xy = rotate(normalPixel.xy, CoronaVertexUserData.x);
 	normalPixel.xy += 0.5;
 	

@@ -48,6 +48,8 @@ local entangleMetatable = {
 			return self.fillProxy -- Fill proxy can now be modified
 		elseif index == "normal" then
 			return self.normalObject.fill
+		elseif index == "addEventListener" then
+			return self.addEventListenerPirate
 		end
 		return self._oldMeta.__index(self, index)
 	end,
@@ -113,7 +115,15 @@ local function entangleFunction(object, functionIndex)
 	end)
 end
 
-local function entangleObject(lightObject)
+local function addEventListenerPirate(self, eventName, eventFunction) -- Metatable called function
+	if eventName == "tap" then
+		print("Pirated tap add")
+		-- Create touch stuff and add to
+	end
+	return self._oldMeta.__index(self, "addEventListener")(self, eventName, eventFunction)
+end
+
+local function entangleObject(lightObject) -- Basic light object principle, where we make object pairs in different worlds (diffuse & normal)
 	lightObject.viewRotation = 0
 	
 	lightObject.fillProxy = setmetatable({ -- Fill proxy is used to forward fill property changes to normal object
@@ -124,6 +134,8 @@ local function entangleObject(lightObject)
 	for fIndex = 1, #FUNCTIONS.DISPLAY do
 		entangleFunction(lightObject, FUNCTIONS.DISPLAY[fIndex])
 	end
+	
+	lightObject.addEventListenerPirate = addEventListenerPirate
 	
 	rawset(lightObject, "_oldMeta", getmetatable(lightObject))
 	setmetatable(lightObject, entangleMetatable)

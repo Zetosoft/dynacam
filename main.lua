@@ -175,7 +175,6 @@ local function addPlayerCharacter()
 	local ship = dynacam.newImage("images/spaceship_carrier_01.png", "images/spaceship_carrier_01_n.png")
 	ship.fill.effect = "filter.pixelate"
 	ship.fill.effect.numPixels = 8
-	ship.strokeWidth = 4
 	transition.to(ship.fill.effect, {time = 5000, numPixels = 1,})
 	pCharacter:insert(ship)
 	pCharacter.ship = ship
@@ -192,6 +191,17 @@ local function addPlayerCharacter()
 	pCharacter.angularDamping = 2
 	pCharacter.linearDamping = 0.5
 	
+	pCharacter:addEventListener("tap", function(event)
+		local pCharacter = event.target
+		local light = pCharacter.shipLight
+		
+		light.state = not light.state
+		local intensity = light.state and 1 or 0
+		
+		light.color[4] = intensity
+	end)
+	
+	
 	local touchArea
 	Runtime:addEventListener("enterFrame", function()
 		local x, y = pCharacter:localToContent(0, 0)
@@ -201,15 +211,11 @@ local function addPlayerCharacter()
 			touchArea.alpha = 0.5
 			touchArea:toFront()
 			
-			camera:insert(touchArea)
+			camera:insert(touchArea) -- TODO: insert into touch layer on top of camera?
 			
 			touchArea:addEventListener("tap", function(event)
-				local light = pCharacter.shipLight
-				
-				light.state = not light.state
-				local intensity = light.state and 1 or 0
-				
-				light.color[4] = intensity
+				event.target = pCharacter
+				return pCharacter:dispatchEvent(event)
 			end)
 		end
 		

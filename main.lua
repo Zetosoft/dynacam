@@ -268,12 +268,28 @@ local function addTestOther()
 	circle.normal = {type = "image", filename = FILLS[1].normal}
 	circle.fill.scaleX = 5
 	circle.fill.scaleY = 5
+	circle:addEventListener("tap", function(event)
+		local circle = event.target
+		
+		transition.cancel(circle)
+		transition.to(circle, {x = circle.x + 500, transition = easing.inOutQuad, time = 1600})
+		
+		return true
+	end)
 	mapGroup:insert(circle)
 	
 	-- RoundedRect
 	local roundedRect = dynacam.newRoundedRect(1750, 1250, 200, 150, 50)
 	roundedRect.fill = {type = "image", filename = FILLS[2].diffuse}
 	roundedRect.normal = {type = "image", filename = FILLS[2].normal}
+	roundedRect:addEventListener("tap", function(event)
+		local roundedRect = event.target
+		
+		transition.cancel(roundedRect)
+		transition.to(roundedRect, {x = roundedRect.x + 500, transition = easing.inOutQuad, time = 1600})
+		
+		return true
+	end)
 	mapGroup:insert(roundedRect)
 	
 	-- Container
@@ -292,6 +308,24 @@ local function addTestOther()
 	mapGroup:insert(otherShip)
 end
 
+local function addMoreTestSprites()
+	local spriteSheet = {
+		sheetData = {width = 90, height = 130, numFrames = 16},
+		sequenceData = {{name = "idle", start = 1, count = 16, time = 600}},
+		diffuse = "images/arrow_128x88_horizontal_texture.png",
+		normal = "images/arrow_128x88_horizontal_normal.png",
+	}
+	local diffuseSheet = graphics.newImageSheet(spriteSheet.diffuse, spriteSheet.sheetData)
+	local normalSheet = graphics.newImageSheet(spriteSheet.normal, spriteSheet.sheetData)
+	
+	local sprite = dynacam.newSprite(diffuseSheet, normalSheet, spriteSheet.sequenceData)
+	sprite.x = 1500
+	sprite.y = 1000
+	sprite:setSequence("idle")
+	sprite:play()
+	mapGroup:insert(sprite)
+end
+
 local function createWorld()
 	display.remove(mapGroup)
 	mapGroup = dynacam.newGroup()
@@ -300,6 +334,7 @@ local function createWorld()
 	addlights()
 	addTestOther()
 	addTestSprites()
+	addMoreTestSprites()
 	addPlayerCharacter()
 end
 

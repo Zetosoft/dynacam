@@ -333,33 +333,38 @@ local function forwardAreaEvent(event)
 	return object:dispatchEvent(event)
 end
 
-local function buildMaskGroup(object)
+local function buildMaskGroup(object, internalFlag)
 	local maskGroup = display.newGroup()
 	
 	if object.numChildren then
 		for index = 1, object.numChildren do
-			local childMaskGroup = buildMaskGroup(object[index])
+			local childMaskGroup = buildMaskGroup(object[index], true)
 			
 			maskGroup:insert(childMaskGroup)
 		end
 	elseif object.path then
 		local path = object.path
 		
+		local x = internalFlag and object.x or 0
+		local y = internalFlag and object.y or 0
+		
+		local maskObject = nil
 		if path.type == "rect" then
-			local maskObject = display.newRect(object.x, object.y, path.width, path.height)
-			maskObject.anchorX = object.anchorX
-			maskObject.anchorY = object.anchorY
-			maskObject:scale(object.xScale, object.yScale)
-			maskGroup:insert(maskObject)
+			maskObject = display.newRect(x, y, path.width, path.height)
 		elseif path.type == "circle" then
-			local maskObject = display.newCircle(object.x, object.y, path.radius)
-			maskObject.anchorX = object.anchorX
-			maskObject.anchorY = object.anchorY
-			maskObject:scale(object.xScale, object.yScale)
-			maskGroup:insert(maskObject)
-		elseif path.type == "" then
-			
+			maskObject = display.newCircle(x, y, path.radius)
+		elseif path.type == "roundedRect" then
+			maskObject = display.newRoundedRect(x, y, path.width, path.height, path.radius)
+		else
+			print()
 		end
+		
+		maskObject.x = x
+		maskObject.y = y
+		maskObject.anchorX = object.anchorX
+		maskObject.anchorY = object.anchorY
+		maskObject:scale(object.xScale, object.yScale)
+		maskGroup:insert(maskObject)
 	end
 	
 	return maskGroup

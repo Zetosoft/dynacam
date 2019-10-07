@@ -131,6 +131,11 @@ local function addTestSprites()
 		coinLight.attenuationFactors = {1, 5, 50}
 		coinGroup:insert(coinLight)
 		
+		coinGroup:addEventListener("tap", function(event)
+			local coinGroup = event.target
+			coinGroup:applyAngularImpulse(5000)
+		end)
+		
 		mapGroup:insert(coinGroup)
 	end
 	
@@ -199,39 +204,6 @@ local function addPlayerCharacter()
 		local intensity = light.state and 1 or 0
 		
 		light.color[4] = intensity
-	end)
-	
-	
-	local touchArea
-	Runtime:addEventListener("enterFrame", function()
-		local x, y = pCharacter:localToContent(0, 0)
-		if not touchArea then
-			touchArea = display.newRect(0, 0, 1, 1)
-			
-			touchArea.alpha = 0.5
-			touchArea:toFront()
-			
-			camera:insert(touchArea) -- TODO: insert into touch layer on top of camera?
-			
-			touchArea:addEventListener("tap", function(event)
-				event.target = pCharacter
-				return pCharacter:dispatchEvent(event)
-			end)
-		end
-		
-		local savedRotation = pCharacter.rotation
-		pCharacter.rotation = 0
-		
-		touchArea.anchorX = (x - pCharacter.contentBounds.xMin) / pCharacter.contentWidth
-		touchArea.anchorY = (y - pCharacter.contentBounds.yMin) / pCharacter.contentHeight
-		touchArea.width = pCharacter.contentWidth
-		touchArea.height = pCharacter.contentHeight
-		
-		pCharacter.rotation = savedRotation
-		
-		touchArea.x = x
-		touchArea.y = y
-		touchArea.rotation = pCharacter.viewRotation
 	end)
 end
 

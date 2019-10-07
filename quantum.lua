@@ -76,18 +76,12 @@ local entangleMetatable = {
 					lightObject.parentRotation = self.viewRotation
 				end
 			end
-		elseif index == "camera" then
+		elseif index == "camera" and value then
 			rawset(self, "_camera", value)
 			
-			if self.queuedListeners then
-				for lIndex = 1, #self.queuedListeners do
-					local params = self.queuedListeners[lIndex]
-					
-					-- value is `_camera`
-					value:addListenerObject(self, params.eventName, params.eventFunction) 
-				end
+			if self.forwardEvents then
+				value:addListenerObject(self) -- value is `_camera`
 			end
-			-- TODO: iterate through pending touch/tap listeners 
 			
 			if self.numChildren then
 				for cIndex = 1, self.numChildren do
@@ -139,10 +133,9 @@ end
 local function addEventListenerPirate(self, eventName, eventFunction) -- Metatable called function
 	if eventName == "tap" or eventName == "touch" then
 		if self.camera then
-			self.camera:addListenerObject(self, eventName, eventFunction)
+			self.camera:addListenerObject(self)
 		else
-			self.queuedListeners = self.queuedListeners or {}
-			self.queuedListeners[#self.queuedListeners + 1] = {eventName = eventName, eventFunction = eventFunction}
+			self.forwardEvents = true
 		end
 	end
 	return self._oldMeta.__index(self, "addEventListener")(self, eventName, eventFunction)

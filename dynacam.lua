@@ -90,7 +90,7 @@ local function cameraGetZoom(self)
 	return self.values.zoom
 end
 
-local function cameraEnterFrame(self, event)
+local function cameraEnterFrame(self, event) 
 	-- Handle damping
 	if self.values.prevDamping ~= self.values.damping then -- Damping changed
 		self.values.prevDamping = self.values.damping
@@ -186,6 +186,16 @@ local function cameraEnterFrame(self, event)
 		self.bodies[bIndex].normalObject.x = self.bodies[bIndex].x
 		self.bodies[bIndex].normalObject.y = self.bodies[bIndex].y
 		self.bodies[bIndex].rotation = self.bodies[bIndex].rotation -- This will propagate changes to normal object
+	end
+	
+	-- Handle touch objects
+	for tIndex = 1, #self.listenerObjects do
+		local object = self.listenerObjects[tIndex]
+		
+		local x, y = object:localToContent(0, 0)
+		object.touchArea.x = x
+		object.touchArea.y = y
+		object.touchArea.rotation = object.viewRotation
 	end
 end
 
@@ -315,6 +325,39 @@ local function cameraNewLight(self, options)
 	return light
 end
 
+local function forwardAreaEvent(event)
+	local touchArea = event.target
+	local object = touchArea.object
+	
+	event.target = object
+	return object:dispatchEvent(event)
+end
+
+local function cameraAddListenerObject(self, object) -- Add tap and touch forwarder rects
+	self.listenerObjects[#self.listenerObjects + 1] = object
+	
+	local touchArea = display.newRect(0, 0, 1, 1)
+	touchArea.alpha = 0.5
+	touchArea:toFront()
+	touchArea.object = object
+	touchArea:addEventListener("tap", forwardAreaEvent)
+	touchArea:addEventListener("touch", forwardAreaEvent)
+	self.touchView:insert(touchArea)
+	object.touchArea = touchArea
+	
+	-- Calculate anchors and dimensions in rotation 0
+	local x, y = object:localToContent(0, 0)
+	local savedRotation = object.rotation
+	object.rotation = 0
+	
+	touchArea.anchorX = (x - object.contentBounds.xMin) / object.contentWidth
+	touchArea.anchorY = (y - object.contentBounds.yMin) / object.contentHeight
+	touchArea.width = object.contentWidth
+	touchArea.height = object.contentHeight
+	
+	object.rotation = savedRotation -- Restore rotation
+end
+
 local function cameraSetDebug(self, value)
 	self.values.debug = value
 	
@@ -379,6 +422,7 @@ function dynacam.newCamera(options)
 	
 	camera.diffuseView = display.newGroup()
 	camera.normalView = display.newGroup()
+	camera.touchView = display.newGroup()
 	
 	-- Frame buffers
 	camera.diffuseBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch})
@@ -387,6 +431,7 @@ function dynacam.newCamera(options)
 	
 	camera.bodies = {}
 	camera.lights = {}
+	camera.listenerObjects = {} -- Touch & tap proxies
 	camera.lightDrawers = {}
 	camera.ambientLightColor = ambientLightColor
 	
@@ -403,6 +448,7 @@ function dynacam.newCamera(options)
 	
 	camera.canvas = canvas
 	camera:insert(camera.canvas)
+	camera:insert(camera.touchView)
 	
 	camera.add = cameraAdd
 	camera.setZoom = cameraSetZoom
@@ -415,6 +461,8 @@ function dynacam.newCamera(options)
 	camera.setFocus = cameraSetFocus
 	camera.removeFocus = cameraRemoveFocus
 	camera.toPoint = cameraToPoint
+	
+	camera.addListenerObject = cameraAddListenerObject
 	
 	camera.setDebug = cameraSetDebug
 	camera.newLight = cameraNewLight

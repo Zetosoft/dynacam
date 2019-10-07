@@ -260,6 +260,14 @@ local function addTestOther()
 	polygon.fill = {type = "image", filename = FILLS[2].diffuse}
 	polygon.normal = {type = "image", filename = FILLS[2].normal}
 	polygon.fill.rotation = 90
+	polygon:addEventListener("tap", function(event)
+		local polygon = event.target
+		
+		transition.cancel(polygon)
+		transition.to(polygon, {x = polygon.x + 500, transition = easing.inOutQuad, time = 1600})
+		
+		return true
+	end)
 	mapGroup:insert(polygon)
 	
 	-- Circle

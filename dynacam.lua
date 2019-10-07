@@ -355,8 +355,8 @@ local function buildMaskGroup(object, internalFlag)
 			maskObject = display.newCircle(x, y, path.radius)
 		elseif path.type == "roundedRect" then
 			maskObject = display.newRoundedRect(x, y, path.width, path.height, path.radius)
-		else
-			print()
+		elseif path.type == "polygon" then
+			maskObject = display.newPolygon(x, y, object.vertices)
 		end
 		
 		maskObject.x = x
@@ -373,7 +373,7 @@ end
 local function cameraAddListenerObject(self, object) -- Add tap and touch forwarder rects
 	self.listenerObjects[#self.listenerObjects + 1] = object
 	
-	local touchArea = buildMaskGroup(object)
+	local touchArea = buildMaskGroup(object) -- Works as intended, but can be replaced with rect + mask
 	touchArea.alpha = 0.5
 	touchArea:toFront()
 	touchArea.object = object

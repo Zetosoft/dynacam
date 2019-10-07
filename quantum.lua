@@ -292,6 +292,8 @@ function quantum.newPolygon(x, y, vertices)
 	local lightPolygon = display.newPolygon(x, y, vertices)
 	local normalPolygon = display.newPolygon(x, y, vertices)
 	
+	lightPolygon.vertices = vertices -- Save vertices in case of touch listener mask rebuild
+	
 	return quantum.newLightObject(lightPolygon, normalPolygon)
 end
 

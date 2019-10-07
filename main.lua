@@ -172,9 +172,7 @@ local function addPlayerCharacter()
 	pCharacter.y = 800
 	mapGroup:insert(pCharacter)
 	
-	local ship = dynacam.newRect(0, 0, 256, 196)
-	ship.fill = {type = "image", filename = "images/spaceship_carrier_01.png"}
-	ship.normal = {type = "image", filename = "images/spaceship_carrier_01_n.png"}
+	local ship = dynacam.newImage("images/spaceship_carrier_01.png", "images/spaceship_carrier_01_n.png")
 	ship.fill.effect = "filter.pixelate"
 	ship.fill.effect.numPixels = 8
 	transition.to(ship.fill.effect, {time = 5000, numPixels = 1,})
@@ -193,7 +191,33 @@ local function addPlayerCharacter()
 	pCharacter.angularDamping = 2
 	pCharacter.linearDamping = 0.5
 	
-	pCharacter.isHitTestable = true
+	local touchArea
+	Runtime:addEventListener("enterFrame", function()
+		local x, y = pCharacter:localToContent(0, 0)
+		if not touchArea then
+			touchArea = display.newRect(0, 0, 1, 1)
+			
+			touchArea.alpha = 0.5
+			touchArea:toFront()
+			
+			camera:insert(touchArea)
+		end
+		
+		local savedRotation = pCharacter.rotation
+		pCharacter.rotation = 0
+		
+		touchArea.anchorX = (x - pCharacter.contentBounds.xMin) / pCharacter.contentWidth
+		touchArea.anchorY = (y - pCharacter.contentBounds.yMin) / pCharacter.contentHeight
+		touchArea.width = pCharacter.contentWidth
+		touchArea.height = pCharacter.contentHeight
+		
+		pCharacter.rotation = savedRotation
+		
+		touchArea.x = x
+		touchArea.y = y
+		touchArea.rotation = pCharacter.viewRotation
+	end)
+	
 	pCharacter:addEventListener("tap", function(event)
 		local light = pCharacter.shipLight
 		

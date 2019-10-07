@@ -52,6 +52,8 @@ local function cameraAdd(self, lightObject, isFocus)
 			self.values.focus = lightObject
 		end
 		
+		lightObject.camera = self
+		
 		self.diffuseView:insert(lightObject)
 		self.normalView:insert(lightObject.normalObject)
 	end

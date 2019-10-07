@@ -44,12 +44,13 @@ local entangleMetatable = {
 			return self.parent.viewRotation -- Will be nil once we hit normal objects in hierarchy
 		elseif index == "fill" then
 			rawset(self.fillProxy, "fill", self._oldMeta.__index(self, index)) -- Update original fill reference in proxy, skipping metamethods
-			
 			return self.fillProxy -- Fill proxy can now be modified
 		elseif index == "normal" then
 			return self.normalObject.fill
 		elseif index == "addEventListener" then
 			return self.addEventListenerPirate
+		elseif index == "camera" then
+			return self._camera
 		end
 		return self._oldMeta.__index(self, index)
 	end,
@@ -73,6 +74,18 @@ local entangleMetatable = {
 					local lightObject = self[cIndex]
 					
 					lightObject.parentRotation = self.viewRotation
+				end
+			end
+		elseif index == "camera" then
+			rawset(self, "_camera", value)
+			
+			-- TODO: iterate through pending touch/tap listeners 
+			
+			if self.numChildren then
+				for cIndex = 1, self.numChildren do
+					local lightObject = self[cIndex]
+					
+					lightObject.camera = value
 				end
 			end
 		else
@@ -117,6 +130,12 @@ end
 
 local function addEventListenerPirate(self, eventName, eventFunction) -- Metatable called function
 	if eventName == "tap" then
+		if self.camera then
+			print()
+		else
+			print()
+			-- Must store event until camera?
+		end
 		print("Pirated tap add")
 		-- Create touch stuff and add to
 	end
@@ -146,6 +165,8 @@ end
 local function lightInsert(self, lightObject)
 	self:oldInsert(lightObject)
 	self.normalObject:insert(lightObject.normalObject)
+	
+	lightObject.camera = self.camera
 	
 	lightObject.parentRotation = self.viewRotation -- Let metatable update efefct
 end

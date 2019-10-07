@@ -333,10 +333,42 @@ local function forwardAreaEvent(event)
 	return object:dispatchEvent(event)
 end
 
+local function buildMaskGroup(object)
+	local maskGroup = display.newGroup()
+	
+	if object.numChildren then
+		for index = 1, object.numChildren do
+			local childMaskGroup = buildMaskGroup(object[index])
+			
+			maskGroup:insert(childMaskGroup)
+		end
+	elseif object.path then
+		local path = object.path
+		
+		if path.type == "rect" then
+			local maskObject = display.newRect(object.x, object.y, path.width, path.height)
+			maskObject.anchorX = object.anchorX
+			maskObject.anchorY = object.anchorY
+			maskObject:scale(object.xScale, object.yScale)
+			maskGroup:insert(maskObject)
+		elseif path.type == "circle" then
+			local maskObject = display.newCircle(object.x, object.y, path.radius)
+			maskObject.anchorX = object.anchorX
+			maskObject.anchorY = object.anchorY
+			maskObject:scale(object.xScale, object.yScale)
+			maskGroup:insert(maskObject)
+		elseif path.type == "" then
+			
+		end
+	end
+	
+	return maskGroup
+end
+
 local function cameraAddListenerObject(self, object) -- Add tap and touch forwarder rects
 	self.listenerObjects[#self.listenerObjects + 1] = object
 	
-	local touchArea = display.newRect(0, 0, 1, 1)
+	local touchArea = buildMaskGroup(object)
 	touchArea.alpha = 0.5
 	touchArea:toFront()
 	touchArea.object = object
@@ -344,18 +376,6 @@ local function cameraAddListenerObject(self, object) -- Add tap and touch forwar
 	touchArea:addEventListener("touch", forwardAreaEvent)
 	self.touchView:insert(touchArea)
 	object.touchArea = touchArea
-	
-	-- Calculate anchors and dimensions in rotation 0
-	local x, y = object:localToContent(0, 0)
-	local savedRotation = object.rotation
-	object.rotation = 0
-	
-	touchArea.anchorX = (x - object.contentBounds.xMin) / object.contentWidth
-	touchArea.anchorY = (y - object.contentBounds.yMin) / object.contentHeight
-	touchArea.width = object.contentWidth
-	touchArea.height = object.contentHeight
-	
-	object.rotation = savedRotation -- Restore rotation
 end
 
 local function cameraSetDebug(self, value)

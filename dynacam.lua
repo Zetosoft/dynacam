@@ -376,11 +376,13 @@ local function cameraAddListenerObject(self, object) -- Add tap and touch forwar
 	self.listenerObjects[#self.listenerObjects + 1] = object
 	
 	local touchArea = buildMaskGroup(object) -- Works as intended, but can be replaced with rect + mask (Tried it but needs to save individual temp files, too much)
-	touchArea.alpha = 0.5
+	touchArea.isVisible = false
+	touchArea.isHitTestable = true
 	touchArea:toFront()
 	touchArea.object = object
 	touchArea:addEventListener("tap", forwardAreaEvent)
 	touchArea:addEventListener("touch", forwardAreaEvent)
+	touchArea:addEventListener("mouse", forwardAreaEvent)
 	self.touchView:insert(touchArea)
 	object.touchArea = touchArea
 end

@@ -131,7 +131,7 @@ local function entangleFunction(object, functionIndex)
 end
 
 local function addEventListenerPirate(self, eventName, eventFunction) -- Metatable called function
-	if eventName == "tap" or eventName == "touch" then
+	if eventName == "tap" or eventName == "touch" or eventName == "mouse" then
 		if self.camera then
 			self.camera:addListenerObject(self)
 		else

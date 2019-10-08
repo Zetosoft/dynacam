@@ -373,7 +373,7 @@ end
 local function cameraAddListenerObject(self, object) -- Add tap and touch forwarder rects
 	self.listenerObjects[#self.listenerObjects + 1] = object
 	
-	local touchArea = buildMaskGroup(object) -- Works as intended, but can be replaced with rect + mask
+	local touchArea = buildMaskGroup(object) -- Works as intended, but can be replaced with rect + mask (Tried it but needs to save individual temp files, too much)
 	touchArea.alpha = 0.5
 	touchArea:toFront()
 	touchArea.object = object

@@ -254,21 +254,16 @@ local function addTestOther()
 	dLine.strokeWidth = 10
 	mapGroup:oldInsert(dLine) -- Used to insert displayObjects
 	
+	local shapesGroup = dynacam.newGroup()
+	mapGroup:insert(shapesGroup)
+	
 	-- Polygon test
 	local vertices = { 0,-110, 27,-35, 105,-35, 43,16, 65,90, 0,45, -65,90, -43,15, -105,-35, -27,-35, }
 	local polygon = dynacam.newPolygon(1500, 1250, vertices)
 	polygon.fill = {type = "image", filename = FILLS[2].diffuse}
 	polygon.normal = {type = "image", filename = FILLS[2].normal}
 	polygon.fill.rotation = 90
-	polygon:addEventListener("tap", function(event)
-		local polygon = event.target
-		
-		transition.cancel(polygon)
-		transition.to(polygon, {x = polygon.x + 500, transition = easing.inOutQuad, time = 1600})
-		
-		return true
-	end)
-	mapGroup:insert(polygon)
+	shapesGroup:insert(polygon)
 	
 	-- Circle
 	local circle = dynacam.newCircle(1250, 1250, 100)
@@ -276,29 +271,23 @@ local function addTestOther()
 	circle.normal = {type = "image", filename = FILLS[1].normal}
 	circle.fill.scaleX = 5
 	circle.fill.scaleY = 5
-	circle:addEventListener("tap", function(event)
-		local circle = event.target
-		
-		transition.cancel(circle)
-		transition.to(circle, {x = circle.x + 500, transition = easing.inOutQuad, time = 1600})
-		
-		return true
-	end)
-	mapGroup:insert(circle)
+	shapesGroup:insert(circle)
 	
 	-- RoundedRect
 	local roundedRect = dynacam.newRoundedRect(1750, 1250, 200, 150, 50)
 	roundedRect.fill = {type = "image", filename = FILLS[2].diffuse}
 	roundedRect.normal = {type = "image", filename = FILLS[2].normal}
-	roundedRect:addEventListener("tap", function(event)
-		local roundedRect = event.target
+	shapesGroup:insert(roundedRect)
+	
+	shapesGroup:addEventListener("tap", function(event)
+		local shapesGroup = event.target
 		
-		transition.cancel(roundedRect)
-		transition.to(roundedRect, {x = roundedRect.x + 500, transition = easing.inOutQuad, time = 1600})
+		transition.cancel(shapesGroup)
+		transition.to(shapesGroup, {x = shapesGroup.x + 500, transition = easing.inOutQuad, time = 1600})
 		
 		return true
 	end)
-	mapGroup:insert(roundedRect)
+
 	
 	-- Container
 	local container = dynacam.newContainer(200, 200)

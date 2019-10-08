@@ -356,7 +356,7 @@ local function sliderListener(event)
 end
 
 local function createSliders()
-	if false then -- Sliders 
+	if true then -- Sliders 
 		local valueScales = {
 			0.02,
 			0.05,

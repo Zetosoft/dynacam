@@ -1,7 +1,6 @@
 ---------------------------------------------- Quantum - Light object creation - Basilio Germán
 local quantum = {}
 ---------------------------------------------- Constants
-local DEFAULT_ATTENUATION = {0.4, 3, 20}
 local DEFAULT_COLOR = {1, 1, 1, 1}
 local DEFAULT_NORMAL = {0.5, 0.5, 1.0}
 local DEFAULT_Z = 0.2
@@ -175,7 +174,7 @@ function quantum.newLight(options) -- Only meant to be used internally by dynaca
 	
 	local z = options.z or DEFAULT_Z
 	local color = options.color or DEFAULT_COLOR
-	local attenuationFactors = options.attenuationFactors or DEFAULT_ATTENUATION
+	local attenuationFactors = options.attenuationFactors or {0.4, 3, 20} -- Default attenuation here as we don't have table copy
 	
 	local light = display.newGroup()
 	light.normalObject = display.newGroup()

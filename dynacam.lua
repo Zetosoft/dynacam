@@ -357,6 +357,8 @@ local function buildMaskGroup(object, internalFlag)
 			maskObject = display.newRoundedRect(x, y, path.width, path.height, path.radius)
 		elseif path.type == "polygon" then
 			maskObject = display.newPolygon(x, y, object.vertices)
+		else -- Mesh? TODO: implement mesh, maybe?
+			maskObject = display.newRect(x, y, path.width or object.width, path.height or object.height)
 		end
 		
 		maskObject.x = x

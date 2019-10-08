@@ -162,7 +162,7 @@ local function entangleObject(lightObject) -- Basic light object principle, wher
 end
 
 local function lightInsert(self, lightObject)
-	self:oldInsert(lightObject)
+	self:diffuseInsert(lightObject)
 	self.normalObject:insert(lightObject.normalObject)
 	
 	lightObject.camera = self.camera
@@ -197,7 +197,7 @@ function quantum.newGroup()
 	local lightGroup = display.newGroup()
 	lightGroup.normalObject = display.newGroup()
 	
-	lightGroup.oldInsert = lightGroup.insert
+	lightGroup.diffuseInsert = lightGroup.insert
 	lightGroup.insert = lightInsert
 	
 	entangleObject(lightGroup)
@@ -216,7 +216,7 @@ function quantum.newContainer(width, height)
 	local lightContainer = display.newContainer(width, height)
 	lightContainer.normalObject = display.newContainer(width, height)
 	
-	lightContainer.oldInsert = lightContainer.insert
+	lightContainer.diffuseInsert = lightContainer.insert
 	lightContainer.insert = lightInsert
 	
 	entangleObject(lightContainer)
@@ -308,7 +308,7 @@ function quantum.newSnapshot(width, height)
 	local lightSnapshot = display.newSnapshot(width, height)
 	local normalSnapshot = display.newSnapshot(width, height)
 	
-	lightSnapshot.oldInsert = lightSnapshot.insert
+	lightSnapshot.diffuseInsert = lightSnapshot.insert
 	lightSnapshot.insert = lightInsert
 	
 	return quantum.newLightObject(lightSnapshot, normalSnapshot, FUNCTIONS.SNAPSHOT)

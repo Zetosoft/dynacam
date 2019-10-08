@@ -56,6 +56,8 @@ local function cameraAdd(self, lightObject, isFocus)
 		
 		self.diffuseView:insert(lightObject)
 		self.normalView:insert(lightObject.normalObject)
+	else -- Regular object
+		self.defaultView:insert(lightObject)
 	end
 end
 
@@ -104,6 +106,7 @@ local function cameraEnterFrame(self, event)
 		-- Damp and apply rotation
 		self.diffuseView.rotation = (self.diffuseView.rotation - (self.diffuseView.rotation - targetRotation) * self.values.dampingRatio)
 		self.normalView.rotation = self.diffuseView.rotation
+		self.defaultView.rotation = self.diffuseView.rotation
 		
 		-- Damp x and y
 		self.values.currentX = (self.values.currentX - (self.values.currentX - (self.values.focus.x)) * self.values.dampingRatio)
@@ -129,12 +132,14 @@ local function cameraEnterFrame(self, event)
 		self.diffuseView.x = finalX
 		self.diffuseView.y = finalY
 		
-		-- Replicate transforms on normalView
-		self.normalView.x = self.diffuseView.x
-		self.normalView.y = self.diffuseView.y
+		-- Replicate transforms on normalView & defaultView
+		self.normalView.x = finalX
+		self.normalView.y = finalY
+		self.defaultView.x = finalX
+		self.defaultView.y = finalY
 		
-		-- Update rotation on all children
-		if self.values.trackRotation then
+		-- Update rotation normal on all children
+		if self.values.trackRotation then -- Only if global rotation has significantly changed
 			if (self.diffuseView.rotation - (self.diffuseView.rotation % 1)) ~= (targetRotation - (targetRotation % 1)) then
 				for cIndex = 1, self.diffuseView.numChildren do
 					self.diffuseView[cIndex].parentRotation = self.diffuseView.rotation
@@ -453,6 +458,7 @@ function dynacam.newCamera(options)
 	
 	camera.diffuseView = display.newGroup()
 	camera.normalView = display.newGroup()
+	camera.defaultView = display.newGroup() -- Default objects will be inserted on a top layer
 	camera.touchView = display.newGroup()
 	
 	-- Frame buffers
@@ -479,6 +485,7 @@ function dynacam.newCamera(options)
 	
 	camera.canvas = canvas
 	camera:insert(camera.canvas)
+	camera:insert(camera.defaultView)
 	camera:insert(camera.touchView)
 	
 	camera.add = cameraAdd

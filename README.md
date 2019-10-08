@@ -13,6 +13,7 @@ The Dynamic lighting camera system adds dynamic lighting and full camera trackin
 - All **quantum.*** constructor functions take in the same parameters as the **display.*** library, except for specified parameters listed below (Usually a normal map filename)
 - Physics bodies must be added to or created with a camera so lights can be calculated correctly for them
 - Lights can be created with **quantum.*** but will not be tracked until added to a camera as well
+- groups can be inserted into lightGroups, but not the other way around.
 
 ### Functions
 ---

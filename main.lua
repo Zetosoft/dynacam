@@ -252,7 +252,15 @@ local function addTestOther()
 	dLine:append(2050, 1100)
 	dLine:append(1550, 350)
 	dLine.strokeWidth = 10
-	mapGroup:oldInsert(dLine) -- Used to insert displayObjects
+	mapGroup:diffuseInsert(dLine) -- Used to insert displayObjects
+	
+	-- Line without lighting
+	local dAddLine = display.newLine(300, 0, 1300, 1000)
+	dAddLine:append(1300, 2000)
+	dAddLine:append(2500, 2000)
+	dAddLine:append(2750, 1750)
+	dAddLine.strokeWidth = 10
+	camera:add(dAddLine) -- Used to insert displayObjects without light
 	
 	local shapesGroup = dynacam.newGroup()
 	mapGroup:insert(shapesGroup)

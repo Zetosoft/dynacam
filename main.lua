@@ -443,7 +443,7 @@ local function initialize()
 	display.setStatusBar( display.HiddenStatusBar )
 	
 	camera = dynacam.newCamera({damping = 10})
-	camera:setDebug(true)
+	camera:setDebug(false)
 	camera.x = display.contentCenterX
 	camera.y = display.contentCenterY
 	

@@ -2,8 +2,8 @@
 application = {
 	content = {
 		fps = 60,
-		width = 720,
-		height = 1440,
+		width = 1000,
+		height = 1000,
 		scale = "zoomEven",
 	}
 }

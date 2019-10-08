@@ -351,8 +351,6 @@ local function sliderListener(event)
 	local float = (value * slider.valueScale) + slider.offset
 
 	pCharacter.shipLight.attenuationFactors[index] = float
-	
-	print(float)
 end
 
 local function createSliders()

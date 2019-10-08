@@ -392,6 +392,8 @@ local function cameraSetDebug(self, value)
 		self.canvas.fill = {type = "image", filename = self.lightBuffer.filename, baseDir = self.lightBuffer.baseDir}
 	elseif value == "normal" then
 		self.canvas.fill = {type = "image", filename = self.normalBuffer.filename, baseDir = self.normalBuffer.baseDir}
+	elseif value == "diffuse" then
+		self.canvas.fill = {type = "image", filename = self.diffuseBuffer.filename, baseDir = self.diffuseBuffer.baseDir}
 	elseif not value then
 		self.canvas.fill = self.canvas.defaultFill -- Restore saved default fill
 		self.canvas.fill.effect = "composite.custom.apply"

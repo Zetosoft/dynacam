@@ -31,12 +31,19 @@ kernel.uniformData =
 		type = "vec3",
 		index = 2, -- u_UserData2
 	},
+	{
+		name = "pointLightScale",
+		default = 1,
+		type = "scalar",
+		index = 3, -- u_UserData3
+	},
 }
 
 kernel.vertex = [[
 uniform P_COLOR vec4 u_UserData0; // pointLightColor
 uniform P_UV vec3 u_UserData1; // pointLightPos
 uniform P_COLOR vec3 u_UserData2; // attenuationFactors
+uniform P_DEFAULT float u_UserData3; // pointLightScale
 
 varying P_COLOR vec3 pointLightColor;
 
@@ -52,6 +59,7 @@ kernel.fragment = [[
 uniform P_COLOR vec4 u_UserData0; // pointLightColor
 uniform P_UV vec3 u_UserData1; // pointLightPos
 uniform P_COLOR vec3 u_UserData2; // attenuationFactors
+uniform P_DEFAULT float u_UserData3; // pointLightScale
 
 varying P_COLOR vec3 pointLightColor;
 
@@ -85,6 +93,7 @@ P_COLOR vec4 FragmentKernel(P_UV vec2 texCoord) {
 	// Fix scale proportion
 	P_UV vec3 fragmentToLight = (pointLightPos - vec3(texCoord, 0.0));
 	fragmentToLight.x *= proportion;
+	fragmentToLight.xy *= u_UserData3;
 
 	P_UV vec3 lightDirection = normalize(fragmentToLight);
 	

@@ -186,6 +186,7 @@ local function cameraEnterFrame(self, event)
 		lightDrawer.fill.effect.pointLightPos = light.position
 		lightDrawer.fill.effect.pointLightColor = light.color
 		lightDrawer.fill.effect.attenuationFactors = light.attenuationFactors or DEFAULT_ATTENUATION
+		lightDrawer.fill.effect.pointLightScale = 1 / self.values.zoom
 		
 		self.lightBuffer:draw(lightDrawer)
 		
@@ -389,7 +390,8 @@ local function cameraAddListenerObject(self, object) -- Add tap and touch forwar
 	self.listenerObjects[#self.listenerObjects + 1] = object
 	
 	local touchArea = buildMaskGroup(object) -- Works as intended, but can be replaced with rect + mask (Tried it but needs to save individual temp files, too much)
-	touchArea.isVisible = false
+--	touchArea.isVisible = false
+	touchArea.alpha = 0.1
 	touchArea.isHitTestable = true
 	touchArea:toFront()
 	touchArea.object = object

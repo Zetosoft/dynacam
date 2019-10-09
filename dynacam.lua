@@ -61,30 +61,37 @@ local function cameraAdd(self, lightObject, isFocus)
 	end
 end
 
-local function cameraSetZoom(self, zoomLevel, zoomDelay, zoomTime, onComplete)
-	zoomLevel = zoomLevel or 1
+local function cameraSetZoom(self, zoom, zoomDelay, zoomTime, onComplete)
+	zoom = zoom or 1
 	zoomDelay = zoomDelay or 0
 	zoomTime = zoomTime or 500
-	self.values.zoom = zoomLevel
-	self.values.zoomMultiplier = 1 / zoomLevel
-	local targetScale = (1 - zoomLevel) * 0.5
 	
-	transition.cancel(self)
-	if zoomDelay <= 0 and zoomTime <= 0 then
-		self.diffuseView.xScale = zoomLevel
-		self.diffuseView.yScale = zoomLevel
+	transition.cancel(self.diffuseView)
+	transition.cancel(self.normalView)
+	transition.cancel(self.defaultView)
+	transition.cancel(self.values)
 		
-		self.diffuseView.x = vcw * targetScale
-		self.diffuseView.y = vch * targetScale
+	if zoomDelay <= 0 and zoomTime <= 0 then
+		self.values.zoom = zoom
+		
+		self.diffuseView.xScale = zoom
+		self.diffuseView.yScale = zoom
+		
+		self.normalView.xScale = zoom
+		self.normalView.yScale = zoom
+		
+		self.defaultView.xScale = zoom
+		self.defaultView.yScale = zoom
 		
 		if onComplete then
 			onComplete()
 		end
 	else
-		local x = vcw * targetScale
-		local y = vch * targetScale
+		transition.to(self.values, {zoom = zoom, time = zoomTime, delay = zoomDelay, transition = easing.inOutQuad, onComplete = onComplete})
 		
-		transition.to(self.diffuseView, {xScale = zoomLevel, yScale = zoomLevel, x = x, y = y, time = zoomTime, delay = zoomDelay, transition = easing.inOutQuad, onComplete = onComplete})
+		transition.to(self.diffuseView, {xScale = zoom, yScale = zoom, time = zoomTime, delay = zoomDelay, transition = easing.inOutQuad})
+		transition.to(self.normalView, {xScale = zoom, yScale = zoom, time = zoomTime, delay = zoomDelay, transition = easing.inOutQuad})
+		transition.to(self.defaultView, {xScale = zoom, yScale = zoom, time = zoomTime, delay = zoomDelay, transition = easing.inOutQuad})
 	end
 end
 
@@ -122,19 +129,19 @@ local function cameraEnterFrame(self, event)
 		radAngle = self.diffuseView.rotation * RADIANS_MAGIC -- Faster convert to radians
 		focusRotationX = mathSin(radAngle) * self.values.currentY
 		rotationX = mathCos(radAngle) * self.values.currentX
-		finalX = -rotationX + focusRotationX
+		finalX = (-rotationX + focusRotationX) * self.values.zoom
 		
 		focusRotationY = mathCos(radAngle) * self.values.currentY
 		rotationY = mathSin(radAngle) * self.values.currentX
-		finalY = -rotationY - focusRotationY
+		finalY = (-rotationY - focusRotationY) * self.values.zoom
 		
 		-- Apply x and y
 		self.diffuseView.x = finalX
 		self.diffuseView.y = finalY
-		
-		-- Replicate transforms on normalView & defaultView
+
 		self.normalView.x = finalX
 		self.normalView.y = finalY
+		
 		self.defaultView.x = finalX
 		self.defaultView.y = finalY
 		
@@ -268,6 +275,7 @@ local function cameraSetFocus(self, object, options)
 	if not soft then
 		self.diffuseView.rotation = 0
 		self.normalView.rotation = 0
+		self.defaultView.rotation = 0
 	end
 	self.values.trackRotation = trackRotation
 end
@@ -447,7 +455,6 @@ function dynacam.newCamera(options)
 		
 		-- Zoom
 		zoom = options.zoom or 1,
-		zoomMultiplier = options.zoomMultiplier or 1,
 		
 		-- Flags
 		accumulateBuffer = false,

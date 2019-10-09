@@ -379,6 +379,8 @@ local function createSliders()
 			slider.index = index
 			slider.valueScale = valueScales[index]
 			slider.offset = offsets[index]
+			
+			slider.alpha = 0.2
 		end
 	end
 end
@@ -386,11 +388,8 @@ end
 local function startGame()
 	camera:start()
 	camera:add(mapGroup)
-	
-	local focus = camera:toPoint(0, 0)
-	pCharacter.focus = focus
-	
---	camera:setZoom(2) -- TODO: fix zoom
+	camera:setFocus(pCharacter)
+	camera:setZoom(2, 1500, 500)
 	 
 	local counter = 0
 	Runtime:addEventListener("enterFrame", function()
@@ -413,24 +412,7 @@ local function startGame()
 				pCharacter:applyTorque(FORCES_KEY[key].torque)
 			end
 		end
-		
-		local fX, fY = pCharacter:getLinearVelocity()
-		
-		fX = (fX > CAM_PAN_LIMIT.X) and CAM_PAN_LIMIT.X or ((fX < -CAM_PAN_LIMIT.X) and -CAM_PAN_LIMIT.X) or fX
-		fY = (fY > CAM_PAN_LIMIT.Y) and CAM_PAN_LIMIT.Y or ((fY < -CAM_PAN_LIMIT.Y) and -CAM_PAN_LIMIT.Y) or fY
-		
-		pCharacter.focus.x = pCharacter.x + fX
-		pCharacter.focus.y = pCharacter.y + fY
 	end)
-
---	Runtime:addEventListener("tap", function(event)
---		local light = pCharacter.shipLight
-		
---		light.state = not light.state
---		local intensity = light.state and 1 or 0
-		
---		light.color[4] = intensity
---	end)
 end
 
 local function cleanUp()
@@ -445,12 +427,8 @@ local function initialize()
 	camera.x = display.contentCenterX
 	camera.y = display.contentCenterY
 	
---	camera.isVisible = false
-	
 	physics.start()
 	physics.setGravity(0, 0)
-	
---	display.setDefault( "background", 1,1,1)
 	
 	lightData = {
 		{position = {400, 400, 0.2}, color = {1, 1, 1, 1}},

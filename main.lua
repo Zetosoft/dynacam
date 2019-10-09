@@ -389,7 +389,7 @@ local function startGame()
 	camera:start()
 	camera:add(mapGroup)
 	camera:setFocus(pCharacter)
-	camera:setZoom(2, 1500, 5000)
+--	camera:setZoom(2, 1500, 5000)
 	 
 	local counter = 0
 	Runtime:addEventListener("enterFrame", function()

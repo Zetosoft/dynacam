@@ -11,6 +11,12 @@ local FUNCTIONS = {
 	LINE = {"append"},
 	DISPLAY = {"rotate", "scale", "setMask", "toBack", "toFront", "translate", "removeSelf"},
 }
+
+local HIT_REFRESH = {
+	["alpha"] = true,
+	["isVisible"] = true,
+	["isHitTestable"] = true,
+}
 ---------------------------------------------- Metatables
 local meshPathEntangleMetatable = { -- used to intercept mesh path functions and replicate to normal
 	__index = function(self, index)
@@ -92,6 +98,11 @@ local entangleMetatable = {
 		else
 			normalObject[index] = value -- Send values to entangled pair
 			self._oldMeta.__newindex(self, index, value)
+			
+			if HIT_REFRESH[index] and rawget(self, "touchArea") then
+				local touchArea = rawget(self, "touchArea")
+				touchArea.isHitTestable = (self.isVisible and (self.alpha > 0)) or self.isHitTestable
+			end
 			
 			if index == "rotation" then -- Propagate rotation change
 				-- Rotation was already set in _oldMeta

@@ -1,4 +1,4 @@
-require("mobdebug").start()
+--require("mobdebug").start()
 ----------------------------------------------- Demo game - Basilio Germán
 local physics = require("physics")
 local widget = require("widget")
@@ -132,7 +132,7 @@ local function addTestSprites()
 		
 		local coinLight = camera:newLight({color = {1, 0.843, 0, 0.25}})
 		coinLight.z = 0.05
-		coinLight.scale = 0.2
+		coinLight.scale = 1 / 1.61803398874989
 		coinGroup:insert(coinLight)
 		
 		coinGroup:addEventListener("tap", function(event)
@@ -314,6 +314,8 @@ local function addTestOther()
 	local otherShip = dynacam.newImage("images/spaceship_carrier_02.png", "images/spaceship_carrier_02_n.png")
 	otherShip.x = 2750
 	otherShip.y = 1250
+	camera:addBody(otherShip, "dynamic", {friction = 0.5, bounce = 0, density = 20, box = {halfWidth = otherShip.width * 0.5, halfHeight = otherShip.height * 0.4}})
+	otherShip.linearDamping = 0.5
 	mapGroup:insert(otherShip)
 end
 
@@ -349,11 +351,13 @@ end
 
 local function sliderListener(event)
 	local slider = event.target
+	local valueText = slider.valueText
 	local index = slider.index
 	local value = event.value
 
 	local float = (value * slider.valueScale) + slider.offset
-
+	valueText.text = string.format("%.02f", float)
+	
 	if slider.listener then
 		slider.listener({value = float})
 	end
@@ -376,15 +380,28 @@ local function createSlider(valueScale, offset, label, listener, defValue)
 	slider.offset = offset
 	sGroup:insert(slider)
 	
-	local textOptions = {
+	local valueTOptions = {
+		x = 0,
+		y = -100,
+		font = native.systemFontBold,
+		fontSize = 40,
+		text = tostring(offset + defValue * valueScale),
+	}
+	local valueText = display.newText(valueTOptions)
+	valueText.anchorX = 0
+	valueText.rotation = -90
+	sGroup:insert(valueText)
+	slider.valueText = valueText
+	
+	local labelTOptions = {
 		x = 0,
 		y = 100,
 		font = native.systemFontBold,
 		fontSize = 40,
 		text = label,
 	}
-	local text = display.newText(textOptions)
-	sGroup:insert(text)
+	local labelText = display.newText(labelTOptions)
+	sGroup:insert(labelText)
 	
 	return sGroup
 end
@@ -425,17 +442,17 @@ local function createSliders()
 	if true then -- Sliders 
 		
 		local sliderData = {
-			{scale = 0.02, offset = 0, label = "C", listener = updateConstant, defValue = 20},
-			{scale = 0.05, offset = 0, label = "L", listener = updateLinear, defValue = 60},
-			{scale = 0.5, offset = 0, label = "Q", listener = updateQuadratic, defValue = 40},
+			{scale = 0.02, offset = 0, label = "Co", listener = updateConstant, defValue = 20},
+			{scale = 0.05, offset = 0, label = "Li", listener = updateLinear, defValue = 60},
+			{scale = 0.5, offset = 0, label = "Qu", listener = updateQuadratic, defValue = 40},
 			
-			{scale = 0.02, offset = 0.01, label = "S", listener = updateScale, defValue = 50},
+			{scale = 0.02, offset = 0.01, label = "Sc", listener = updateScale, defValue = 50},
 			
-			{scale = 0.01, offset = 0, label = "R", listener = updateColorR, defValue = 100},
-			{scale = 0.01, offset = 0, label = "G", listener = updateColorG, defValue = 100},
-			{scale = 0.01, offset = 0, label = "B", listener = updateColorB, defValue = 100},
+			{scale = 0.01, offset = 0, label = "Re", listener = updateColorR, defValue = 100},
+			{scale = 0.01, offset = 0, label = "Gr", listener = updateColorG, defValue = 100},
+			{scale = 0.01, offset = 0, label = "Bl", listener = updateColorB, defValue = 100},
 			
-			{scale = 0.02, offset = 0.5, label = "Z", listener = updateZoom, defValue = 25},
+			{scale = 0.02, offset = 0.5, label = "Zo", listener = updateZoom, defValue = 25},
 		}
 		
 		local currentX = display.screenOriginX

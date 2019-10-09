@@ -354,37 +354,93 @@ local function sliderListener(event)
 
 	local float = (value * slider.valueScale) + slider.offset
 
-	pCharacter.shipLight.attenuationFactors[index] = float
+	if slider.listener then
+		slider.listener({value = float})
+	end
+end
+
+local function createSlider(valueScale, offset, label, listener, defValue)
+	local sGroup = display.newGroup()
+	sGroup.alpha = 0.5
+	
+	local slider = widget.newSlider({
+		x = 0,
+		y = 0,
+		orientation = "vertical",
+		height = 150,
+		value = defValue,
+		listener = sliderListener
+	})
+	slider.listener = listener
+	slider.valueScale = valueScale
+	slider.offset = offset
+	sGroup:insert(slider)
+	
+	local textOptions = {
+		x = 0,
+		y = 100,
+		font = native.systemFontBold,
+		fontSize = 40,
+		text = label,
+	}
+	local text = display.newText(textOptions)
+	sGroup:insert(text)
+	
+	return sGroup
+end
+
+local function updateConstant(event)
+	pCharacter.shipLight.attenuationFactors[1] = event.value
+end
+
+local function updateLinear(event)
+	pCharacter.shipLight.attenuationFactors[2] = event.value
+end
+
+local function updateQuadratic(event)
+	pCharacter.shipLight.attenuationFactors[3] = event.value
+end
+
+local function updateColorR(event)
+	pCharacter.shipLight.color[1] = event.value
+end
+
+local function updateColorG(event)
+	pCharacter.shipLight.color[2] = event.value
+end
+
+local function updateColorB(event)
+	pCharacter.shipLight.color[3] = event.value
+end
+
+local function updateZoom(event)
+	camera:setZoom(event.value, 0, 0)
 end
 
 local function createSliders()
 	if true then -- Sliders 
-		local valueScales = {
-			0.02,
-			0.05,
-			0.5,
-		}
 		
-		local offsets = {
-			0,
-			0,
-			0,
-		}
-		
-		for index = 1, 3 do
-			local slider = widget.newSlider({
-				x = display.screenOriginX + index * 50,
-				y = display.screenOriginY + display.actualContentHeight - 100,
-				orientation = "vertical",
-				height = 150,
-				value = 50,
-				listener = sliderListener
-			})
-			slider.index = index
-			slider.valueScale = valueScales[index]
-			slider.offset = offsets[index]
+		local sliderData = {
+			{scale = 0.02, offset = 0, label = "C", listener = updateConstant, defValue = 20},
+			{scale = 0.05, offset = 0, label = "L", listener = updateLinear, defValue = 60},
+			{scale = 0.5, offset = 0, label = "Q", listener = updateQuadratic, defValue = 40},
 			
-			slider.alpha = 0.2
+			{scale = 0.01, offset = 0, label = "R", listener = updateColorR, defValue = 100},
+			{scale = 0.01, offset = 0, label = "G", listener = updateColorG, defValue = 100},
+			{scale = 0.01, offset = 0, label = "B", listener = updateColorB, defValue = 100},
+			
+			{scale = 0.02, offset = 0.5, label = "Z", listener = updateZoom, defValue = 25},
+		}
+		
+		local currentX = display.screenOriginX
+		local currentY = display.screenOriginY + display.actualContentHeight - 150
+		for index = 1, #sliderData do
+			currentX = currentX + 50
+			
+			local data = sliderData[index]
+			local slider = createSlider(data.scale, data.offset, data.label, data.listener, data.defValue)
+			slider.x = currentX
+			slider.y = currentY
 		end
 	end
 end

@@ -104,7 +104,7 @@ local entangleMetatable = {
 				touchArea.isHitTestable = (self.isVisible and (self.alpha > 0)) or self.isHitTestable
 			end
 			
-			if index == "rotation" then -- Propagate rotation change
+			if index == "rotation" and value then -- Propagate rotation change
 				-- Rotation was already set in _oldMeta
 				self.viewRotation = (self.parentRotation or 0) + value -- parentRotation can be nil
 				

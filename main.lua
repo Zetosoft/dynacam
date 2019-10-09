@@ -401,6 +401,10 @@ local function updateQuadratic(event)
 	pCharacter.shipLight.attenuationFactors[3] = event.value
 end
 
+local function updateScale(event)
+	pCharacter.shipLight.scale = event.value
+end
+
 local function updateColorR(event)
 	pCharacter.shipLight.color[1] = event.value
 end
@@ -424,6 +428,8 @@ local function createSliders()
 			{scale = 0.02, offset = 0, label = "C", listener = updateConstant, defValue = 20},
 			{scale = 0.05, offset = 0, label = "L", listener = updateLinear, defValue = 60},
 			{scale = 0.5, offset = 0, label = "Q", listener = updateQuadratic, defValue = 40},
+			
+			{scale = 0.02, offset = 0.01, label = "S", listener = updateScale, defValue = 50},
 			
 			{scale = 0.01, offset = 0, label = "R", listener = updateColorR, defValue = 100},
 			{scale = 0.01, offset = 0, label = "G", listener = updateColorG, defValue = 100},

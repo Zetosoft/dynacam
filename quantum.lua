@@ -1,7 +1,6 @@
 ---------------------------------------------- Quantum - Light object creation - Basilio Germán
 local quantum = {}
 ---------------------------------------------- Constants
-local DEFAULT_COLOR = {1, 1, 1, 1}
 local DEFAULT_NORMAL = {0.5, 0.5, 1.0}
 local DEFAULT_Z = 0.2
 
@@ -184,7 +183,8 @@ function quantum.newLight(options) -- Only meant to be used internally by dynaca
 	options = options or {}
 	
 	local z = options.z or DEFAULT_Z
-	local color = options.color or DEFAULT_COLOR
+	local color = options.color or {1, 1, 1, 1} -- New instance of white
+	local scale = options.scale or 1
 	local attenuationFactors = options.attenuationFactors or {0.4, 3, 20} -- Default attenuation here as we don't have table copy
 	
 	local light = display.newGroup()
@@ -196,6 +196,7 @@ function quantum.newLight(options) -- Only meant to be used internally by dynaca
 	entangleObject(light)
 	
 	light.position = {0, 0, z} -- Internal table, auto updates for fast shader data pass
+	light.scale = scale
 	light.z = z
 	light.attenuationFactors = attenuationFactors
 	light.color = color
@@ -326,7 +327,7 @@ end
 
 function quantum.newText(options)
 	options = options or {}
-	local normal = options.normal or DEFAULT_NORMAL
+	local normal = options.normal or {0.5, 0.5, 1.0}
 	
 	local lightText = display.newText(options)
 	local normalText = display.newText(options)

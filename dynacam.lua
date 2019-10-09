@@ -186,7 +186,7 @@ local function cameraEnterFrame(self, event)
 		lightDrawer.fill.effect.pointLightPos = light.position
 		lightDrawer.fill.effect.pointLightColor = light.color
 		lightDrawer.fill.effect.attenuationFactors = light.attenuationFactors or DEFAULT_ATTENUATION
-		lightDrawer.fill.effect.pointLightScale = 1 / self.values.zoom -- TODO: optimize division
+		lightDrawer.fill.effect.pointLightScale = 1 / (self.values.zoom * light.scale) -- TODO: implement light.inverseScale -- (1 / scale)
 		
 		self.lightBuffer:draw(lightDrawer)
 		

@@ -132,7 +132,7 @@ local function addTestSprites()
 		
 		local coinLight = camera:newLight({color = {1, 0.843, 0, 0.25}})
 		coinLight.z = 0.05
-		coinLight.attenuationFactors = {1, 5, 50}
+		coinLight.scale = 0.2
 		coinGroup:insert(coinLight)
 		
 		coinGroup:addEventListener("tap", function(event)

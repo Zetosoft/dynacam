@@ -28,10 +28,12 @@ local FILLS = {
 	[1] = {
 		diffuse = "images/wall.png",
 		normal = "images/wall_n.png",
+		zMult = 1,
 	},
 	[2] = {
 		diffuse = "images/brick.png",
 		normal = "images/brick_n.png",
+		zMult = 1,
 	},
 }
 local MAP = {
@@ -74,6 +76,8 @@ local function createBackground()
 			local rect = dynacam.newRect(x * size, y * size, size, size)
 			rect.fill = {type = "image", filename = FILLS[MAP[y][x]].diffuse}
 			rect.normal = {type = "image", filename = FILLS[MAP[y][x]].normal}
+			
+			rect.normal.effect.zMult = FILLS[MAP[y][x]].zMult
 			
 			mapGroup:insert(rect)
 		end

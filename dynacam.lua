@@ -343,7 +343,7 @@ local function cameraNewLight(self, options)
 	end
 	
 	local light = quantum.newLight(options)
-	self:addLight(light)
+	self:trackLight(light)
 	
 	return light
 end

@@ -27,6 +27,12 @@ kernel.vertexData =
 		type = "scalar",
 		index = 2, -- CoronaVertexUserData.z
 	},
+	{
+		name = "zMult",
+		default = 1,
+		type = "scalar",
+		index = 3, -- CoronaVertexUserData.w
+	},
 }
 kernel.fragment = [[
 P_POSITION vec2 rotateNormalVector(P_NORMAL vec2 vector, P_DEFAULT float angle) {
@@ -45,6 +51,8 @@ P_COLOR vec4 FragmentKernel(P_UV vec2 texCoord){
 	normalPixel.y *= CoronaVertexUserData.z;
 	normalPixel.xy = rotateNormalVector(normalPixel.xy, CoronaVertexUserData.x);
 	normalPixel.xy += 0.5;
+	
+	normalPixel.z *= CoronaVertexUserData.w;
 	
 	normalPixel.xy *= normalPixel.w;
 

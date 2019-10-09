@@ -206,8 +206,10 @@ local function cameraEnterFrame(self, event)
 		local object = self.listenerObjects[tIndex]
 		
 		local x, y = object:localToContent(0, 0)
-		object.touchArea.x = x
-		object.touchArea.y = y
+		object.touchArea.xScale = self.values.zoom
+		object.touchArea.yScale = self.values.zoom
+		object.touchArea.x = x 
+		object.touchArea.y = y 
 		object.touchArea.rotation = object.viewRotation
 	end
 end
@@ -391,7 +393,7 @@ local function cameraAddListenerObject(self, object) -- Add tap and touch forwar
 	
 	local touchArea = buildMaskGroup(object) -- Works as intended, but can be replaced with rect + mask (Tried it but needs to save individual temp files, too much)
 --	touchArea.isVisible = false
-	touchArea.alpha = 0.1
+	touchArea.alpha = 0.5
 	touchArea.isHitTestable = true
 	touchArea:toFront()
 	touchArea.object = object

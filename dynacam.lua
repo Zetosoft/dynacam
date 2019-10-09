@@ -316,15 +316,25 @@ local function finalizeCameraLight(event)
 	removeObjectFromTable(camera.lights, light)
 end
 
+local function cameraTrackBody(self, body)
+	body:addEventListener("finalize", finalizeCameraBody)
+	self.bodies[#self.bodies + 1] = body
+end
+
 local function cameraAddBody(self, object, ...)
 	if physics.addBody(object, ...) then
-		object:addEventListener("finalize", finalizeCameraBody)
-		
-		self.bodies[#self.bodies + 1] = object
+		self:trackBody(object)
 		
 		return true
 	end
 	return false
+end
+
+local function cameraTrackLight(self, light)
+	light.camera = self
+	light:addEventListener("finalize", finalizeCameraLight)
+	
+	self.lights[#self.lights + 1] = light
 end
 
 local function cameraNewLight(self, options)
@@ -333,10 +343,7 @@ local function cameraNewLight(self, options)
 	end
 	
 	local light = quantum.newLight(options)
-	light.camera = self
-	light:addEventListener("finalize", finalizeCameraLight)
-	
-	self.lights[#self.lights + 1] = light
+	self:addLight(light)
 	
 	return light
 end
@@ -522,7 +529,9 @@ function dynacam.newCamera(options)
 	
 	camera.setDebug = cameraSetDebug
 	camera.newLight = cameraNewLight
+	camera.trackLight = cameraTrackLight
 	camera.addBody = cameraAddBody
+	camera.trackBody = cameraTrackBody
 	
 	camera:addEventListener("finalize", finalizeCamera)
 	

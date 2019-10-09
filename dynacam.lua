@@ -392,7 +392,6 @@ local function cameraAddListenerObject(self, object) -- Add tap and touch forwar
 	self.listenerObjects[#self.listenerObjects + 1] = object
 	
 	local touchArea = buildMaskGroup(object) -- Works as intended, but can be replaced with rect + mask (Tried it but needs to save individual temp files, too much)
-	touchArea.isVisible = false
 	touchArea.isHitTestable = true
 	touchArea:toFront()
 	touchArea.object = object
@@ -406,12 +405,18 @@ end
 local function cameraSetDebug(self, value)
 	self.values.debug = value
 	
+	self.touchView.isVisible = false
 	if value == "light" then
 		self.canvas.fill = {type = "image", filename = self.lightBuffer.filename, baseDir = self.lightBuffer.baseDir}
 	elseif value == "normal" then
 		self.canvas.fill = {type = "image", filename = self.normalBuffer.filename, baseDir = self.normalBuffer.baseDir}
 	elseif value == "diffuse" then
 		self.canvas.fill = {type = "image", filename = self.diffuseBuffer.filename, baseDir = self.diffuseBuffer.baseDir}
+	elseif value == "listeners" then
+		self.touchView.isVisible = true
+		self.canvas.fill = self.canvas.defaultFill -- Restore saved default fill
+		self.canvas.fill.effect = "composite.custom.apply"
+		self.canvas.fill.effect.ambientLightColor = self.ambientLightColor
 	elseif not value then
 		self.canvas.fill = self.canvas.defaultFill -- Restore saved default fill
 		self.canvas.fill.effect = "composite.custom.apply"
@@ -470,6 +475,9 @@ function dynacam.newCamera(options)
 	camera.normalView = display.newGroup()
 	camera.defaultView = display.newGroup() -- Default objects will be inserted on a top layer
 	camera.touchView = display.newGroup()
+	
+	camera.touchView.isVisible = false
+	camera.touchView.isHitTestable = true
 	
 	-- Frame buffers
 	camera.diffuseBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch})

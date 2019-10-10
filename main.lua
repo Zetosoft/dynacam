@@ -137,7 +137,14 @@ local function addTestSprites()
 		
 		coinGroup:addEventListener("tap", function(event)
 			local coinGroup = event.target
-			coinGroup:applyAngularImpulse(5000)
+			if not coinGroup.collected then
+				coinGroup.collected = true
+				
+				coinGroup:applyAngularImpulse(5000)
+				
+				transition.to(coinGroup, {alpha = 0, time = 400, transition = easing.inQuad})
+				transition.to(coinGroup, {xScale = 0.1, yScale = 0.1, time = 500, transition = easing.inQuad, onComplete = display.remove})
+			end
 		end)
 		
 		mapGroup:insert(coinGroup)
@@ -316,6 +323,7 @@ local function addTestOther()
 	otherShip.y = 1250
 	camera:addBody(otherShip, "dynamic", {friction = 0.5, bounce = 0, density = 20, box = {halfWidth = otherShip.width * 0.5, halfHeight = otherShip.height * 0.4}})
 	otherShip.linearDamping = 0.5
+	otherShip:applyAngularImpulse(10000000)
 	mapGroup:insert(otherShip)
 end
 

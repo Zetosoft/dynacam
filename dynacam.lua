@@ -45,6 +45,9 @@ local vchr = 1 / vch
 local display = display
 local easing = easing
 local transition = transition
+
+local rawset = rawset
+local rawget = rawget
 ---------------------------------------------- Local functions 
 local function cameraAdd(self, lightObject, isFocus)
 	if lightObject.normalObject then -- Only lightObjects have a normalObject property
@@ -97,6 +100,12 @@ end
 
 local function cameraGetZoom(self)
 	return self.values.zoom
+end
+
+local function removeTouchArea(object)
+	local touchArea = object.touchArea
+	display.remove(touchArea)
+	object.touchArea = nil
 end
 
 local function cameraEnterFrame(self, event) 
@@ -165,52 +174,69 @@ local function cameraEnterFrame(self, event)
 	self.normalBuffer:draw(self.normalView)
 	self.normalBuffer:invalidate({accumulate = self.values.accumulateBuffer})
 	
-	-- Handle lights
-	for lIndex = 1, #self.lightDrawers do
+	-- Handle lights -- TODO: don't remove light drawers
+	for lIndex = #self.lightDrawers, 1, -1  do
 		display.remove(self.lightDrawers[lIndex])
+		self.lightDrawers[lIndex] = nil
 	end
 	
-	for lIndex = 1, #self.lights do
+	for lIndex = #self.lights, 1, -1 do
 		local light = self.lights[lIndex]
 		
-		local x, y = light:localToContent(0, 0)
+		if light.removeFlag then
+			tableRemove(self.lights, lIndex)
+		else
+			local x, y = light:localToContent(0, 0)
 		
-		light.position[1] = (x) * vcwr + 0.5
-		light.position[2] = (y) * vchr + 0.5
-		light.position[3] = light.z
-		
-		local lightDrawer = display.newRect(0, 0, vcw, vch)
-		lightDrawer.fill = {type = "image", filename = self.normalBuffer.filename, baseDir = self.normalBuffer.baseDir}
-		lightDrawer.fill.blendMode = "add"
-		lightDrawer.fill.effect = "filter.custom.light"
-		lightDrawer.fill.effect.pointLightPos = light.position
-		lightDrawer.fill.effect.pointLightColor = light.color
-		lightDrawer.fill.effect.attenuationFactors = light.attenuationFactors or DEFAULT_ATTENUATION
-		lightDrawer.fill.effect.pointLightScale = 1 / (self.values.zoom * light.scale) -- TODO: implement light.inverseScale -- (1 / scale)
-		
-		self.lightBuffer:draw(lightDrawer)
-		
-		self.lightDrawers[lIndex] = lightDrawer
+			light.position[1] = (x) * vcwr + 0.5
+			light.position[2] = (y) * vchr + 0.5
+			light.position[3] = light.z
+			
+			local lightDrawer = display.newRect(0, 0, vcw, vch)
+			lightDrawer.fill = {type = "image", filename = self.normalBuffer.filename, baseDir = self.normalBuffer.baseDir}
+			lightDrawer.fill.blendMode = "add"
+			lightDrawer.fill.effect = "filter.custom.light"
+			lightDrawer.fill.effect.pointLightPos = light.position
+			lightDrawer.fill.effect.pointLightColor = light.color
+			lightDrawer.fill.effect.attenuationFactors = light.attenuationFactors or DEFAULT_ATTENUATION
+			lightDrawer.fill.effect.pointLightScale = 1 / (self.values.zoom * light.scale) -- TODO: implement light.inverseScale -- (1 / scale)
+			
+			self.lightBuffer:draw(lightDrawer)
+			
+			self.lightDrawers[lIndex] = lightDrawer
+		end
 	end
 	self.lightBuffer:invalidate({accumulate = false})
 	
 	-- Handle physics bodies
-	for bIndex = 1, #self.bodies do
-		self.bodies[bIndex].normalObject.x = self.bodies[bIndex].x
-		self.bodies[bIndex].normalObject.y = self.bodies[bIndex].y
-		self.bodies[bIndex].rotation = self.bodies[bIndex].rotation -- This will propagate changes to normal object
+	for bIndex = #self.bodies, 1, -1 do
+		local body = self.bodies[bIndex]
+		
+		if body.removeFlag then
+			tableRemove(self.bodies, bIndex)
+		else
+			body.normalObject.x = body.x
+			body.normalObject.y = body.y
+			body.rotation = body.rotation -- This will propagate changes to normal object
+		end
 	end
 	
 	-- Handle touch objects
-	for tIndex = 1, #self.listenerObjects do
-		local object = self.listenerObjects[tIndex]
+	for lIndex = #self.listenerObjects, 1, -1 do
+		local object = self.listenerObjects[lIndex]
 		
-		local x, y = object:localToContent(0, 0)
-		object.touchArea.xScale = self.values.zoom
-		object.touchArea.yScale = self.values.zoom
-		object.touchArea.x = x 
-		object.touchArea.y = y 
-		object.touchArea.rotation = object.viewRotation
+		if object.removeFlag then
+			tableRemove(self.listenerObjects, lIndex)
+			
+			removeTouchArea(object)
+		else
+			local x, y = object:localToContent(0, 0)
+			object.touchArea.xScale = self.values.zoom
+			object.touchArea.yScale = self.values.zoom
+			object.touchArea.x = x 
+			object.touchArea.y = y 
+			object.touchArea.rotation = object.viewRotation
+		end
 	end
 end
 
@@ -290,35 +316,26 @@ local function finalizeCamera(event)
 	end
 end
 
-local function removeObjectFromTable(table, object)
-	if table and "table" == type(table) then
-		for index = #table, 1, -1 do
-			if object == table[index] then
-				tableRemove(table, index) -- Used as it re indexes table
-				return true
-			end
-		end
-	end
-	return
-end
-
 local function finalizeCameraBody(event) -- Physics
 	local body = event.target
-	local camera = body.camera
-	
-	removeObjectFromTable(camera.bodies, body)
+	rawset(body, "removeFlag", true)
 end
 
 local function finalizeCameraLight(event)
 	local light = event.target
-	local camera = light.camera
-	
-	removeObjectFromTable(camera.lights, light)
+	rawset(light, "removeFlag", true)
+end
+
+local function finalizeTouchObject(event)
+	local object = event.target
+	rawset(object, "removeFlag", true)
 end
 
 local function cameraTrackBody(self, body)
-	body:addEventListener("finalize", finalizeCameraBody)
-	self.bodies[#self.bodies + 1] = body
+	if body and body.bodyType then
+		self.bodies[#self.bodies + 1] = body
+		body:addEventListener("finalize", finalizeCameraBody)
+	end
 end
 
 local function cameraAddBody(self, object, ...)
@@ -332,9 +349,9 @@ end
 
 local function cameraTrackLight(self, light)
 	light.camera = self
-	light:addEventListener("finalize", finalizeCameraLight)
-	
 	self.lights[#self.lights + 1] = light
+	
+	light:addEventListener("finalize", finalizeCameraLight)
 end
 
 local function cameraNewLight(self, options)
@@ -352,8 +369,10 @@ local function forwardAreaEvent(event)
 	local touchArea = event.target
 	local object = touchArea.object
 	
-	event.target = object
-	return object:dispatchEvent(event)
+	if not object.removeFlag then -- Avoid sending event to destroyed one
+		event.target = object
+		return object:dispatchEvent(event)
+	end
 end
 
 local function buildMaskGroup(object, internalFlag)
@@ -396,17 +415,24 @@ local function buildMaskGroup(object, internalFlag)
 end
 
 local function cameraAddListenerObject(self, object) -- Add tap and touch forwarder rects
-	self.listenerObjects[#self.listenerObjects + 1] = object
-	
-	local touchArea = buildMaskGroup(object) -- Works as intended, but can be replaced with rect + mask (Tried it but needs to save individual temp files, too much)
-	touchArea.isHitTestable = true
-	touchArea:toFront()
-	touchArea.object = object
-	touchArea:addEventListener("tap", forwardAreaEvent)
-	touchArea:addEventListener("touch", forwardAreaEvent)
-	touchArea:addEventListener("mouse", forwardAreaEvent)
-	self.touchView:insert(touchArea)
-	object.touchArea = touchArea
+	if (object.camera == self) and (not object.touchArea) then
+		self.listenerObjects[#self.listenerObjects + 1] = object
+		
+		local touchArea = buildMaskGroup(object) -- Works as intended, but can be replaced with rect + mask (Tried it but needs to save individual temp files, too much)
+		touchArea.isHitTestable = true
+		touchArea:toFront()
+		touchArea.object = object
+		touchArea.camera = self
+		touchArea:addEventListener("tap", forwardAreaEvent)
+		touchArea:addEventListener("touch", forwardAreaEvent)
+		touchArea:addEventListener("mouse", forwardAreaEvent)
+		self.touchView:insert(touchArea)
+		object.touchArea = touchArea
+		
+		object:addEventListener("finalize", finalizeTouchObject) -- Remove touchArea and remove from list
+	else
+		return false
+	end
 end
 
 local function cameraSetDebug(self, value)

@@ -44,8 +44,8 @@ local fillProxyMetatable = { -- Used to intercept .fill transform changes and re
 
 local entangleMetatable = {
 	__index = function(self, index)
-		if index == "parentRotation" then
-			return self.parent.viewRotation -- Will be nil once we hit normal objects in hierarchy
+		if index == "parentRotation" then -- .parent can be nil apparently when deleting object
+			return self.parent and self.parent.viewRotation -- Will be nil once we hit normal objects in hierarchy
 		elseif index == "fill" then
 			rawset(self.fillProxy, "fill", self._oldMeta.__index(self, index)) -- Update original fill reference in proxy, skipping metamethods
 			return self.fillProxy -- Fill proxy can now be modified

@@ -134,6 +134,7 @@ local function addTestSprites()
 		coinLight.z = 0.05
 		coinLight.scale = 1 / 1.61803398874989
 		coinGroup:insert(coinLight)
+		coinGroup.light = coinLight
 		
 		coinGroup:addEventListener("tap", function(event)
 			local coinGroup = event.target
@@ -142,7 +143,9 @@ local function addTestSprites()
 				
 				coinGroup:applyAngularImpulse(5000)
 				
+				transition.to(coinGroup.light, {scale = 0.01, time = 400, transition = easing.inQuad})
 				transition.to(coinGroup, {alpha = 0, time = 400, transition = easing.inQuad})
+				transition.to(coinGroup, {xScale = 0.1, yScale = 0.1, time = 500, transition = easing.inQuad, onComplete = display.remove})
 				transition.to(coinGroup, {xScale = 0.1, yScale = 0.1, time = 500, transition = easing.inQuad, onComplete = display.remove})
 			end
 		end)

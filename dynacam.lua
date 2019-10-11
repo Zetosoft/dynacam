@@ -22,6 +22,9 @@ local finalX, finalY
 local radAngle
 local focusRotationX, focusRotationY
 local rotationX, rotationY
+
+local initialized
+local cameras
 ---------------------------------------------- Constants
 local RADIANS_MAGIC = math.pi / 180 -- Used to convert degrees to radians
 local DEFAULT_ATTENUATION = {0.4, 3, 20}
@@ -314,6 +317,14 @@ local function finalizeCamera(event)
 	if camera.values.isTracking then
 		Runtime:removeEventListener("enterFrame", camera)
 	end
+	
+	for cIndex = 1, #cameras do -- FInd self and remove from camera lists
+		if cameras[cIndex] == camera then
+			tableRemove(cameras, camera)
+			
+			break
+		end
+	end
 end
 
 local function finalizeCameraBody(event) -- Physics
@@ -460,6 +471,43 @@ local function cameraSetDebug(self, value)
 		self.lights[lIndex].debug.isVisible = value
 	end
 end
+
+local function addCameraFramebuffers(camera)
+	if camera.canvas then
+		camera.diffuseBuffer:releaseSelf()
+		camera.normalBuffer:releaseSelf()
+		camera.lightBuffer:releaseSelf()
+	end
+	
+	camera.diffuseBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch})
+	camera.normalBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch})
+	camera.lightBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch})
+	
+	if not camera.canvas then
+		camera.canvas = display.newRect(0, 0, vcw, vch) -- Canvas - this is what is actually shown
+	else
+		camera.canvas.width = vcw
+		camera.canvas.height = vch
+	end
+	
+	camera.canvas.defaultFill = { -- Save default fill
+		type = "composite",
+		paint1 = {type = "image", filename = camera.diffuseBuffer.filename, baseDir = camera.diffuseBuffer.baseDir},
+		paint2 = {type = "image", filename = camera.lightBuffer.filename, baseDir = camera.lightBuffer.baseDir}
+	}
+	camera.canvas.fill = camera.canvas.defaultFill
+	camera.canvas.fill.effect = "composite.custom.apply"
+	camera.canvas.fill.effect.ambientLightColor = camera.ambientLightColor
+end
+
+local function initialize()
+	if not initialized then
+		initialized = true
+		
+		
+		cameras = {}
+	end
+end
 ---------------------------------------------- Functions
 function dynacam.refresh()
 	ccx = display.contentCenterX
@@ -469,6 +517,10 @@ function dynacam.refresh()
 	
 	vcwr = 1 / vcw
 	vchr = 1 / vch
+	
+	for cIndex = 1, #cameras do
+		addCameraFramebuffers(cameras[cIndex])
+	end
 end
 
 function dynacam.newCamera(options)
@@ -512,29 +564,15 @@ function dynacam.newCamera(options)
 	camera.touchView.isVisible = false
 	camera.touchView.isHitTestable = true
 	
-	-- Frame buffers
-	camera.diffuseBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch})
-	camera.normalBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch})
-	camera.lightBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch})
-	
 	camera.bodies = {}
 	camera.lights = {}
 	camera.listenerObjects = {} -- Touch & tap proxies
 	camera.lightDrawers = {}
 	camera.ambientLightColor = ambientLightColor
 	
-	-- Canvas - this is what is actually shown
-	local canvas = display.newRect(0, 0, vcw, vch)
-	canvas.defaultFill = { -- Save default fill
-		type = "composite",
-		paint1 = {type = "image", filename = camera.diffuseBuffer.filename, baseDir = camera.diffuseBuffer.baseDir},
-		paint2 = {type = "image", filename = camera.lightBuffer.filename, baseDir = camera.lightBuffer.baseDir}
-	}
-	canvas.fill = canvas.defaultFill
-	canvas.fill.effect = "composite.custom.apply"
-	canvas.fill.effect.ambientLightColor = ambientLightColor
+	-- Frame buffers
+	addCameraFramebuffers(camera)
 	
-	camera.canvas = canvas
 	camera:insert(camera.canvas)
 	camera:insert(camera.defaultView)
 	camera:insert(camera.touchView)
@@ -561,8 +599,12 @@ function dynacam.newCamera(options)
 	
 	camera:addEventListener("finalize", finalizeCamera)
 	
+	cameras[#cameras + 1] = camera
+	
 	return camera
 end
+----------------------------------------------
+initialize()
 
 return dynacam 
  

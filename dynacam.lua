@@ -474,6 +474,9 @@ end
 
 local function addCameraFramebuffers(camera)
 	if camera.canvas then
+		camera:insert(camera.diffuseView) -- Remove views from buffers
+		camera:insert(camera.normalView)
+		
 		camera.diffuseBuffer:releaseSelf()
 		camera.normalBuffer:releaseSelf()
 		camera.lightBuffer:releaseSelf()

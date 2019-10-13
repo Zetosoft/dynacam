@@ -386,12 +386,12 @@ local function forwardAreaEvent(event)
 	end
 end
 
-local function buildMaskGroup(object, internalFlag)
+local function buildMaskGroup(object, internalFlag, color)
 	local maskGroup = display.newGroup()
 	
 	if object.numChildren then
 		for index = 1, object.numChildren do
-			local childMaskGroup = buildMaskGroup(object[index], true)
+			local childMaskGroup = buildMaskGroup(object[index], true, color)
 			
 			maskGroup:insert(childMaskGroup)
 		end
@@ -414,6 +414,7 @@ local function buildMaskGroup(object, internalFlag)
 			maskObject = display.newRect(x, y, path.width or object.width, path.height or object.height)
 		end
 		
+		maskObject.fill = color
 		maskObject.x = x
 		maskObject.y = y
 		maskObject.anchorX = object.anchorX
@@ -429,7 +430,12 @@ local function cameraAddListenerObject(self, object) -- Add tap and touch forwar
 	if (object.camera == self) and (not object.touchArea) then
 		self.listenerObjects[#self.listenerObjects + 1] = object
 		
-		local touchArea = buildMaskGroup(object) -- Works as intended, but can be replaced with rect + mask (Tried it but needs to save individual temp files, too much)
+		local randomColor = {
+			math.random(1, 4) / 4,
+			math.random(1, 4) / 4,
+			math.random(1, 4) / 4,
+		}
+		local touchArea = buildMaskGroup(object, nil, randomColor) -- Works as intended, but can be replaced with rect + mask (Tried it but needs to save individual temp files, too much)
 		touchArea.isHitTestable = true
 		touchArea:toFront()
 		touchArea.object = object
@@ -474,7 +480,8 @@ end
 
 local function addCameraFramebuffers(camera)
 	if camera.canvas then
-		camera:insert(camera.diffuseView) -- Remove views from buffers
+		
+		camera:insert(camera.diffuseView)
 		camera:insert(camera.normalView)
 		
 		camera.diffuseBuffer:releaseSelf()

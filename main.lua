@@ -112,8 +112,8 @@ local function addTestSprites()
 	local cDiffuseSheet = graphics.newImageSheet(coinSpriteSheet.diffuse, coinSpriteSheet.sheetData)
 	local cNormalSheet = graphics.newImageSheet(coinSpriteSheet.normal, coinSpriteSheet.sheetData)
 	
-	local gridSize = 10
-	for index = 1, 50 do
+	local gridSize = 8
+	for index = 1, 40 do
 		local x = index % gridSize
 		local y = math.ceil(index * (1 / gridSize))
 		
@@ -300,6 +300,8 @@ local function addTestOther()
 	roundedRect.fill = {type = "image", filename = FILLS[2].diffuse}
 	roundedRect.normal = {type = "image", filename = FILLS[2].normal}
 	shapesGroup:insert(roundedRect)
+	
+	transition.to(roundedRect, {delay = 5000, time = 2000, alpha = 0, xScale = 1.5, yScale = 0.5, onComplete = display.remove})
 	
 	shapesGroup:addEventListener("tap", function(event)
 		local shapesGroup = event.target
@@ -517,7 +519,7 @@ local function initialize()
 	display.setStatusBar( display.HiddenStatusBar )
 	
 	camera = dynacam.newCamera({damping = 10})
-	camera:setDebug(false)
+--	camera:setDebug("listeners")
 	camera.x = display.contentCenterX
 	camera.y = display.contentCenterY
 	

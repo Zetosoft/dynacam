@@ -29,6 +29,15 @@ local cameras
 local RADIANS_MAGIC = math.pi / 180 -- Used to convert degrees to radians
 local DEFAULT_ATTENUATION = {0.4, 3, 20}
 local DEFAULT_AMBIENT_LIGHT = {0, 0, 0, 1}
+
+local TRANSFORM_PROPERTIES_MATCHER = {
+	["x"] = true,
+	["y"] = true,
+	["xScale"] = true,
+	["yScale"] = true,
+	["rotation"] = true,
+}
+local FLAG_REMOVE = "_removeFlag"
 ---------------------------------------------- Cache
 local mathAbs = math.abs
 local mathHuge = math.huge
@@ -51,6 +60,18 @@ local transition = transition
 
 local rawset = rawset
 local rawget = rawget
+---------------------------------------------- Metatable
+local touchMonitorMetatable = { -- Monitor transform changes
+	__index = function(self, index)
+		return self._oldMetaTouch.__index(self, index)
+	end,
+	__newindex = function(self, index, value)
+		if TRANSFORM_PROPERTIES_MATCHER[index] then -- Replicate transform to maskObject
+			rawget(self, "maskObject")[index] = value
+		end
+		self._oldMetaTouch.__newindex(self, index, value)
+	end
+}
 ---------------------------------------------- Local functions 
 local function cameraAdd(self, lightObject, isFocus)
 	if lightObject.normalObject then -- Only lightObjects have a normalObject property
@@ -109,6 +130,92 @@ local function removeTouchArea(object)
 	local touchArea = object.touchArea
 	display.remove(touchArea)
 	object.touchArea = nil
+end
+
+local function forwardAreaEvent(event)
+	local touchArea = event.target
+	local object = touchArea.object
+	
+	if not rawget(object, FLAG_REMOVE) then -- Avoid sending event to destroyed one
+		event.target = object
+		return object:dispatchEvent(event)
+	end
+end
+
+local function finalizeMaskedObject(event)
+	local object = event.target
+	
+	display.remove(object.maskObject)
+	object.maskObject = nil
+end
+
+local function buildMaskGroup(object, internalFlag, color)
+	local maskObject = nil
+	
+	if object.numChildren then -- Is Group
+		maskObject = display.newGroup()
+		for index = 1, object.numChildren do
+			local childMaskObject = buildMaskGroup(object[index], true, color)
+			
+			maskObject:insert(childMaskObject)
+		end
+	elseif object.path then -- ShapeObject
+		local path = object.path
+		
+		local x = internalFlag and object.x or 0
+		local y = internalFlag and object.y or 0
+		
+		if path.type == "rect" then
+			maskObject = display.newRect(x, y, path.width, path.height)
+		elseif path.type == "circle" then
+			maskObject = display.newCircle(x, y, path.radius)
+		elseif path.type == "roundedRect" then
+			maskObject = display.newRoundedRect(x, y, path.width, path.height, path.radius)
+		elseif path.type == "polygon" then
+			maskObject = display.newPolygon(x, y, object.vertices)
+		else -- Fallback: Mesh? TODO: implement mesh, maybe?
+			maskObject = display.newRect(x, y, path.width or object.width, path.height or object.height)
+		end
+		
+		maskObject.fill = color
+		maskObject.x = x
+		maskObject.y = y
+		maskObject.anchorX = object.anchorX
+		maskObject.anchorY = object.anchorY
+		maskObject:scale(object.xScale, object.yScale)
+	end
+	
+	if internalFlag then -- Only child object need to be monitored
+		object.maskObject = maskObject -- Object itself will update maskObject transform, save reference
+		rawset(object, "_oldMetaTouch", getmetatable(object))
+		setmetatable(object, touchMonitorMetatable)
+		
+		object:addEventListener("finalize", finalizeMaskedObject) -- TODO: maybe add another finalize listener to maskObject?
+	end
+	
+	return maskObject
+end
+
+local function buildTouchArea(camera, object)
+	local color = (object.touchArea and object.touchArea.color) or {
+		math.random(1, 4) / 4,
+		math.random(1, 4) / 4,
+		math.random(1, 4) / 4,
+	}
+	display.remove(object.touchArea)
+		
+	local touchArea = buildMaskGroup(object, nil, color) -- Works as intended, but can be replaced with rect + mask (Tried it but needs to save individual temp files, too much)
+	touchArea.isHitTestable = true
+	touchArea.alpha = 0.25
+	touchArea:toFront()
+	touchArea.color = color
+	touchArea.object = object
+	touchArea.camera = camera
+	touchArea:addEventListener("tap", forwardAreaEvent)
+	touchArea:addEventListener("touch", forwardAreaEvent)
+	touchArea:addEventListener("mouse", forwardAreaEvent)
+	camera.touchView:insert(touchArea)
+	object.touchArea = touchArea
 end
 
 local function cameraEnterFrame(self, event) 
@@ -186,7 +293,8 @@ local function cameraEnterFrame(self, event)
 	for lIndex = #self.lights, 1, -1 do
 		local light = self.lights[lIndex]
 		
-		if light.removeFlag then
+		
+		if rawget(light, FLAG_REMOVE) then
 			tableRemove(self.lights, lIndex)
 		else
 			local x, y = light:localToContent(0, 0)
@@ -215,7 +323,7 @@ local function cameraEnterFrame(self, event)
 	for bIndex = #self.bodies, 1, -1 do
 		local body = self.bodies[bIndex]
 		
-		if body.removeFlag then
+		if rawget(body, FLAG_REMOVE) then
 			tableRemove(self.bodies, bIndex)
 		else
 			body.normalObject.x = body.x
@@ -228,12 +336,14 @@ local function cameraEnterFrame(self, event)
 	for lIndex = #self.listenerObjects, 1, -1 do
 		local object = self.listenerObjects[lIndex]
 		
-		if object.removeFlag then
+		if rawget(object, FLAG_REMOVE) then
 			tableRemove(self.listenerObjects, lIndex)
 			
 			removeTouchArea(object)
 		else
 			local x, y = object:localToContent(0, 0)
+			
+			-- Override our values
 			object.touchArea.xScale = self.values.zoom
 			object.touchArea.yScale = self.values.zoom
 			object.touchArea.x = x 
@@ -329,17 +439,17 @@ end
 
 local function finalizeCameraBody(event) -- Physics
 	local body = event.target
-	rawset(body, "removeFlag", true)
+	rawset(body, FLAG_REMOVE, true)
 end
 
 local function finalizeCameraLight(event)
 	local light = event.target
-	rawset(light, "removeFlag", true)
+	rawset(light, FLAG_REMOVE, true)
 end
 
 local function finalizeTouchObject(event)
 	local object = event.target
-	rawset(object, "removeFlag", true)
+	rawset(object, FLAG_REMOVE, true)
 end
 
 local function cameraTrackBody(self, body)
@@ -376,75 +486,11 @@ local function cameraNewLight(self, options)
 	return light
 end
 
-local function forwardAreaEvent(event)
-	local touchArea = event.target
-	local object = touchArea.object
-	
-	if not object.removeFlag then -- Avoid sending event to destroyed one
-		event.target = object
-		return object:dispatchEvent(event)
-	end
-end
-
-local function buildMaskGroup(object, internalFlag, color)
-	local maskGroup = display.newGroup()
-	
-	if object.numChildren then
-		for index = 1, object.numChildren do
-			local childMaskGroup = buildMaskGroup(object[index], true, color)
-			
-			maskGroup:insert(childMaskGroup)
-		end
-	elseif object.path then
-		local path = object.path
-		
-		local x = internalFlag and object.x or 0
-		local y = internalFlag and object.y or 0
-		
-		local maskObject = nil
-		if path.type == "rect" then
-			maskObject = display.newRect(x, y, path.width, path.height)
-		elseif path.type == "circle" then
-			maskObject = display.newCircle(x, y, path.radius)
-		elseif path.type == "roundedRect" then
-			maskObject = display.newRoundedRect(x, y, path.width, path.height, path.radius)
-		elseif path.type == "polygon" then
-			maskObject = display.newPolygon(x, y, object.vertices)
-		else -- Mesh? TODO: implement mesh, maybe?
-			maskObject = display.newRect(x, y, path.width or object.width, path.height or object.height)
-		end
-		
-		maskObject.fill = color
-		maskObject.x = x
-		maskObject.y = y
-		maskObject.anchorX = object.anchorX
-		maskObject.anchorY = object.anchorY
-		maskObject:scale(object.xScale, object.yScale)
-		maskGroup:insert(maskObject)
-	end
-	
-	return maskGroup
-end
-
 local function cameraAddListenerObject(self, object) -- Add tap and touch forwarder rects
 	if (object.camera == self) and (not object.touchArea) then
 		self.listenerObjects[#self.listenerObjects + 1] = object
 		
-		local randomColor = {
-			math.random(1, 4) / 4,
-			math.random(1, 4) / 4,
-			math.random(1, 4) / 4,
-		}
-		local touchArea = buildMaskGroup(object, nil, randomColor) -- Works as intended, but can be replaced with rect + mask (Tried it but needs to save individual temp files, too much)
-		touchArea.isHitTestable = true
-		touchArea:toFront()
-		touchArea.object = object
-		touchArea.camera = self
-		touchArea:addEventListener("tap", forwardAreaEvent)
-		touchArea:addEventListener("touch", forwardAreaEvent)
-		touchArea:addEventListener("mouse", forwardAreaEvent)
-		self.touchView:insert(touchArea)
-		object.touchArea = touchArea
+		buildTouchArea(self, object)
 		
 		object:addEventListener("finalize", finalizeTouchObject) -- Remove touchArea and remove from list
 	else
@@ -513,7 +559,6 @@ end
 local function initialize()
 	if not initialized then
 		initialized = true
-		
 		
 		cameras = {}
 	end

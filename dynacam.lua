@@ -38,6 +38,7 @@ local TRANSFORM_PROPERTIES_MATCHER = {
 	["rotation"] = true,
 }
 local FLAG_REMOVE = "_removeFlag"
+local SCALE_LIGHTS = 1000 / display.viewableContentHeight
 ---------------------------------------------- Cache
 local mathAbs = math.abs
 local mathHuge = math.huge
@@ -322,7 +323,7 @@ local function cameraEnterFrame(self, event)
 			lightDrawer.fill.effect.pointLightPos = light.position
 			lightDrawer.fill.effect.pointLightColor = light.color
 			lightDrawer.fill.effect.attenuationFactors = light.attenuationFactors or DEFAULT_ATTENUATION
-			lightDrawer.fill.effect.pointLightScale = 1 / (self.values.zoom * light.scale) -- TODO: implement light.inverseScale -- (1 / scale)
+			lightDrawer.fill.effect.pointLightScale = 1 / (self.values.zoom * light.scale * SCALE_LIGHTS) -- TODO: implement light.inverseScale -- (1 / scale)
 			
 			self.lightBuffer:draw(lightDrawer)
 			

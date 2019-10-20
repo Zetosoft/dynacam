@@ -149,6 +149,14 @@ local function finalizeMaskedObject(event)
 	object.maskObject = nil
 end
 
+local function createMaskInsert(self, newObject)
+	self:regularInsert(newObject)
+	local maskObject = self.maskObject
+	
+	local newMaskObject = self.buildMaskGroup(newObject, true, self.touchArea.color)
+	maskObject:insert(newMaskObject)
+end
+
 local function buildMaskGroup(object, internalFlag, color)
 	local maskObject = nil
 	
@@ -159,6 +167,10 @@ local function buildMaskGroup(object, internalFlag, color)
 			
 			maskObject:insert(childMaskObject)
 		end
+		
+		object.regularInsert = object.insert
+		object.insert = createMaskInsert
+		object.buildMaskGroup = buildMaskGroup
 	elseif object.path then -- ShapeObject
 		local path = object.path
 		
@@ -185,8 +197,8 @@ local function buildMaskGroup(object, internalFlag, color)
 		maskObject:scale(object.xScale, object.yScale)
 	end
 	
+	object.maskObject = maskObject -- Object itself will update maskObject transform, save reference
 	if internalFlag then -- Only child object need to be monitored
-		object.maskObject = maskObject -- Object itself will update maskObject transform, save reference
 		rawset(object, "_oldMetaTouch", getmetatable(object))
 		setmetatable(object, touchMonitorMetatable)
 		

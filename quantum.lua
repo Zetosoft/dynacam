@@ -266,6 +266,7 @@ function quantum.newMesh(options)
 	local normalMesh = display.newMesh(options)
 	
 	lightMesh.pathFunctions = {
+		type = "mesh",
 		path = lightMesh.path,
 		normalPath = normalMesh.path,
 		

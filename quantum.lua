@@ -1,4 +1,6 @@
 ---------------------------------------------- Quantum - Light object creation - Basilio Germán
+local normalShaders = require("shaders.normal")
+
 local quantum = {}
 ---------------------------------------------- Constants
 local DEFAULT_NORMAL = {0.5, 0.5, 1.0}
@@ -31,11 +33,16 @@ local meshPathEntangleMetatable = { -- used to intercept mesh path functions and
 
 local fillProxyMetatable = { -- Used to intercept .fill transform changes and replicate to normal
 	__index = function(self, index)
+		if index == "effect" then -- TODO: return effect proxy?
+			
+		end
 		return self.fill[index]
 	end,
 	__newindex = function(self, index, value)
 		if index ~= "effect" then
 			self.normalObject.fill[index] = value
+		else
+			self.normalObject.fill.effect = normalShaders.getEffect(value)
 		end
 		
 		self.fill[index] = value
@@ -63,14 +70,14 @@ local entangleMetatable = {
 		if index == "normal" then
 			if normalObject.fill then
 				normalObject.fill = value
-				normalObject.fill.effect = "filter.custom.rotate"
-				normalObject.fill.effect.rotation = math.rad(self.viewRotation + self.fill.rotation) -- Fill might be rotated
+				normalObject.fill.effect = normalShaders.getEffect()
+				normalObject.fill.effect.rotate.rotation = math.rad(self.viewRotation + self.fill.rotation) -- Fill might be rotated
 			end
 		elseif index == "parentRotation" then -- Parent is telling us to update our view rotation 
 			self.viewRotation = value + self.rotation
 			
 			if normalObject.fill and normalObject.fill.effect then
-				normalObject.fill.effect.rotation = math.rad(self.viewRotation + (self.fill.rotation or 0)) -- Fill might be rotated
+				normalObject.fill.effect.rotate.rotation = math.rad(self.viewRotation + (self.fill.rotation or 0)) -- Fill might be rotated
 			end
 			
 			if self.numChildren then
@@ -289,7 +296,7 @@ function quantum.newMesh(options)
 		end
 	}
 	
-	normalMesh.fill.effect = "filter.custom.rotate"
+	normalMesh.fill.effect = normalShaders.getEffect()
 	
 	lightMesh.normalObject = normalMesh
 	entangleObject(lightMesh)
@@ -364,7 +371,7 @@ function quantum.newLightObject(diffuseObject, normalObject, entangleFunctions)
 	end
 	
 	if normalObject.fill then
-		normalObject.fill.effect = "filter.custom.rotate"
+		normalObject.fill.effect = normalShaders.getEffect()
 	end
 	
 	entangleObject(diffuseObject)

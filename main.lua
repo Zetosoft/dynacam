@@ -1,4 +1,4 @@
---require("mobdebug").start()
+require("mobdebug").start()
 ----------------------------------------------- Demo game - Basilio Germán
 local physics = require("physics")
 local widget = require("widget")
@@ -519,7 +519,7 @@ local function initialize()
 	display.setStatusBar( display.HiddenStatusBar )
 	
 	camera = dynacam.newCamera({damping = 10})
---	camera:setDrawMode("listeners")
+	camera:setDrawMode("normal")
 	camera.x = display.contentCenterX
 	camera.y = display.contentCenterY
 	

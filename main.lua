@@ -194,7 +194,8 @@ local function addPlayerCharacter()
 	local ship = dynacam.newImage("images/spaceship_carrier_01.png", "images/spaceship_carrier_01_n.png")
 	ship.fill.effect = "filter.pixelate"
 	ship.fill.effect.numPixels = 8
-	transition.to(ship.fill.effect, {time = 5000, numPixels = 1,})
+	transition.to(ship.fill.effect, {time = 10000, numPixels = 1,})
+	transition.to(ship.normal.effect.effect, {time = 10000, numPixels = 1,}) -- TODO: this is impractical
 	pCharacter:insert(ship)
 	pCharacter.ship = ship
 	
@@ -519,7 +520,7 @@ local function initialize()
 	display.setStatusBar( display.HiddenStatusBar )
 	
 	camera = dynacam.newCamera({damping = 10})
-	camera:setDrawMode("normal")
+--	camera:setDrawMode("normal")
 	camera.x = display.contentCenterX
 	camera.y = display.contentCenterY
 	

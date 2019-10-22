@@ -142,7 +142,10 @@ local function entangleFunction(object, functionIndex)
 	object["_"..functionIndex] = originalFunction
 	rawset(object, functionIndex, function(self, ...)
 		self["_"..functionIndex](self, ...)
-		self.normalObject[functionIndex](self.normalObject, ...)
+		
+		if self.normalObject then
+			self.normalObject[functionIndex](self.normalObject, ...)
+		end
 	end)
 end
 

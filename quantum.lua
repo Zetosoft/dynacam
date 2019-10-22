@@ -124,8 +124,8 @@ local tableRemove = table.remove
 ---------------------------------------------- Local functions
 local function finalizeEntangledObject(event)
 	local lightObject = event.target
-	display.remove(lightObject.normalObject)
 	
+	display.remove(lightObject.normalObject)
 	lightObject.normalObject = nil
 end
 

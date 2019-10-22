@@ -135,11 +135,14 @@ end
 
 local function forwardAreaEvent(event)
 	local touchArea = event.target
-	local object = touchArea.object
-	
-	if not rawget(object, FLAG_REMOVE) then -- Avoid sending event to destroyed one
-		event.target = object
-		return object:dispatchEvent(event)
+	if touchArea then
+		local object = touchArea.object
+		if object then
+			if not rawget(object, FLAG_REMOVE) then -- Avoid sending event to destroyed one
+				event.target = object
+				return object:dispatchEvent(event)
+			end
+		end
 	end
 end
 
@@ -290,6 +293,7 @@ local function cameraEnterFrame(self, event)
 	-- Prepare buffers
 	self.lightBuffer:setBackground(0) -- Clear buffers
 	self.diffuseBuffer:setBackground(0)
+	self.normalBuffer:setBackground(0)
 	
 	self.diffuseBuffer:draw(self.diffuseView)
 	self.diffuseBuffer:invalidate({accumulate = self.values.accumulateBuffer})

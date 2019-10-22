@@ -297,15 +297,13 @@ local function cameraEnterFrame(self, event)
 	self.normalBuffer:draw(self.normalView)
 	self.normalBuffer:invalidate({accumulate = self.values.accumulateBuffer})
 	
-	-- Handle lights -- TODO: don't remove light drawers
-	for lIndex = #self.lightDrawers, 1, -1  do
+	-- Handle lights
+	for lIndex = self.lightDrawers.numChildren, 1, -1  do
 		display.remove(self.lightDrawers[lIndex])
-		self.lightDrawers[lIndex] = nil
 	end
 	
 	for lIndex = #self.lights, 1, -1 do
 		local light = self.lights[lIndex]
-		
 		
 		if rawget(light, FLAG_REMOVE) then
 			tableRemove(self.lights, lIndex)
@@ -325,11 +323,10 @@ local function cameraEnterFrame(self, event)
 			lightDrawer.fill.effect.attenuationFactors = light.attenuationFactors or DEFAULT_ATTENUATION
 			lightDrawer.fill.effect.pointLightScale = 1 / (self.values.zoom * light.scale * SCALE_LIGHTS) -- TODO: implement light.inverseScale -- (1 / scale)
 			
-			self.lightBuffer:draw(lightDrawer)
-			
-			self.lightDrawers[lIndex] = lightDrawer
+			self.lightDrawers:insert(lightDrawer)
 		end
 	end
+	self.lightBuffer:draw(self.lightDrawers)
 	self.lightBuffer:invalidate({accumulate = false})
 	
 	-- Handle physics bodies
@@ -634,7 +631,7 @@ function dynacam.newCamera(options)
 	camera.bodies = {}
 	camera.lights = {}
 	camera.listenerObjects = {} -- Touch & tap proxies
-	camera.lightDrawers = {}
+	camera.lightDrawers = display.newGroup()
 	camera.ambientLightColor = ambientLightColor
 	
 	-- Frame buffers

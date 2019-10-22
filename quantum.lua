@@ -122,7 +122,7 @@ local entangleMetatable = {
 local tableRemove = table.remove
 ---------------------------------------------- Constants
 ---------------------------------------------- Local functions
-local function finalizeLightObject(event)
+local function finalizeEntangledObject(event)
 	local lightObject = event.target
 	display.remove(lightObject.normalObject)
 	
@@ -167,7 +167,7 @@ local function entangleObject(lightObject) -- Basic light object principle, wher
 	rawset(lightObject, "_oldMeta", getmetatable(lightObject))
 	setmetatable(lightObject, entangleMetatable)
 	
-	lightObject:addEventListener("finalize", finalizeLightObject)
+	lightObject:addEventListener("finalize", finalizeEntangledObject)
 end
 
 local function lightInsert(self, lightObject)

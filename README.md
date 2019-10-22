@@ -15,37 +15,61 @@ The Dynamic lighting camera system adds dynamic lighting and full camera trackin
 - Lights can be created with **quantum.*** but will not be tracked until added to a camera as well
 - groups can be inserted into lightGroups, but not the other way around.
 
+### Gotchas
+- Because objects are drawn to a canvas, and the graphics engine "owns" these objects, Touch, tap and mouse listeners are forwarded using mirror groups that sit on front of the canvas. Complex, large groups will make the engine stutter if the hierarchy is too dynamic (Objects deleted, created, moved constantly).
+
 ### Functions
 ---
 
 - dynacam.*
 	- dynacam.*newCamera(**options**)* : Returns new *cameraObject*
 		- **options.damping** (number) Number specifying damping. Higher value means slower camera tracking. Default is 10
+		- **options.ambientLightColor** (table) 4 Indexed table specifying RGB and intensity respective float values. Default is black *{0, 0, 0, 1}*
 	- dynacam.*refresh()*
 		- Refresh internal display values in case of a viewport dimensions change
 - *cameraObject*
+    - cameraObject:*add(**lightObject**, **isFocus**)*
+        - Add specified *lightObject* to camera hierarchy. Think of it like an *:insert()* replacement.
     - cameraObject:*start()*
         - Starts updating the camera
     - cameraObject:*stop()*
         - Stops updating the camera
+    - cameraObject:*getZoom()*
+        - Returns zoom value. Default is 1
+    - cameraObject:*setZoom(**zoom**, **zoomDelay**, **zoomTime**, **onComplete**)*
+        - Sets camera **zoom** (number), as a scale number
+        - **zoomDelay** (number) delay in milliseconds before zoom begins or sets
+        - **zoomTime** (number) time in milliseconds for zoom to get to specified value
+        - **onComplete** Optional function called when zoom animation completes.
     - cameraObject:*setBounds(**minX**, **maxX**, **minY**, **maxY**)*
         - Sets camera boundaries
     - cameraObject:*newLight(**options**)* : Creates and tracks new light
         - **options.color** (table) Table containing normalized RGB and intensity values
 		- **options.attenuationFactors** (table) Table containing *constant*, *linear* and *quadratic* light attenuation factors
 		- **options.z** (number) Light height (0 - 1 range)
+	- cameraObject:*trackLight(**light**)*
+	    - Adds light to camera so light can be rendered
     - cameraObject:*addBody(**object**, **...**)*
         - Create and track physics body. Uses same parameters as *physics.addBody()*
+    - cameraObject:*trackBody(**body**)*
+        - Track physics body. Used to update physics body normal rotation correctly. Lights will not work on a physics body correctly until tracked by a camera.
     - cameraObject:*setFocus(**object**, **options**)*
-        - Will track and follow **object** in camera center
+        - Will track and follow **object** in camera center.
         - **options.soft** (bool) If *false*, focus will be immediate
         - **options.trackRotation** (bool) If *true*, will track object rotation
     - cameraObject:*removeFocus()*
         - Removes any object from focus
     - cameraObject:*toPoint(**x**, **y**, **options**)*
         - Sets focus on the specified **x** and **y** coordinates. **options** are the same as *cameraObject:setFocus()*
-    - cameraObject:*setDebug(**value**)*
-        - **value** (string/bool) Can be set to *true* to view lights as small dots, *"normal"* to view normal frameBuffer, or *"light"* to view lightBuffer
+    - cameraObject:*setDrawMode(**value**)*
+        - **value** (string/bool) Can be set to one of the following:
+            - *true* to view lights as small dots
+            - *"diffuse"* to view diffuse frameBuffer
+            - *"normal"* to view normal frameBuffer
+            - *"listeners"* to view touch forward areas.
+            - *"light"* to view lightBuffer
+    - cameraObject:*addListenerObject(**object**)*
+        - Internal function used to forward touch, tap and mouse events to objects owned by the camera canvas. This is done automatically and internally by all *lightObject*
 - quantum.*
 	- quantum.*newGroup()*
 	- quantum.*newLight(**options**)* : returns new untracked light. Must add light to camera using cameraObject.*addLight(**light**)*, or use cameraObject.*newLight(**options**)* to create a light instead.
@@ -73,7 +97,7 @@ The Dynamic lighting camera system adds dynamic lighting and full camera trackin
 ---
 
 - *lightObject*
-    - lightObject.*normal* (paint) : Supports any paint like *lightObject.fill*, but is intended for normal maps
+    - lightObject.*normal* (paint) : Supports any paint like *lightObject.fill*, but is intended for normal maps. A normal map rotation fix effect is placed by default, if removed, normal maps will stop illuminating correctly if rotated!
 
 
 ---

@@ -511,7 +511,7 @@ local function cameraAddListenerObject(self, object) -- Add tap and touch forwar
 	end
 end
 
-local function cameraSetDebug(self, value)
+local function cameraSetDrawMode(self, value)
 	self.values.debug = value
 	
 	self.touchView.isVisible = false
@@ -526,7 +526,7 @@ local function cameraSetDebug(self, value)
 		self.canvas.fill = self.canvas.defaultFill -- Restore saved default fill
 		self.canvas.fill.effect = "composite.custom.apply"
 		self.canvas.fill.effect.ambientLightColor = self.ambientLightColor
-	elseif not value then
+	elseif not value then -- Default
 		self.canvas.fill = self.canvas.defaultFill -- Restore saved default fill
 		self.canvas.fill.effect = "composite.custom.apply"
 		self.canvas.fill.effect.ambientLightColor = self.ambientLightColor
@@ -595,7 +595,6 @@ function dynacam.newCamera(options)
 	options = options or {}
 	
 	local damping = options.damping or 10
-	local zoomMultiplier = options.zoomMultiplier or 1
 	local ambientLightColor = options.ambientLightColor or DEFAULT_AMBIENT_LIGHT
 	
 	local camera = display.newGroup()
@@ -659,7 +658,7 @@ function dynacam.newCamera(options)
 	
 	camera.addListenerObject = cameraAddListenerObject
 	
-	camera.setDebug = cameraSetDebug
+	camera.setDrawMode = cameraSetDrawMode
 	camera.newLight = cameraNewLight
 	camera.trackLight = cameraTrackLight
 	camera.addBody = cameraAddBody

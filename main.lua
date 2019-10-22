@@ -519,7 +519,7 @@ local function initialize()
 	display.setStatusBar( display.HiddenStatusBar )
 	
 	camera = dynacam.newCamera({damping = 10})
---	camera:setDebug("listeners")
+	camera:setDrawMode("listeners")
 	camera.x = display.contentCenterX
 	camera.y = display.contentCenterY
 	

@@ -178,10 +178,10 @@ end
 local function entangleObject(lightObject) -- Basic light object principle, where we make object pairs in different worlds (diffuse & normal)
 	lightObject.viewRotation = 0
 	
-	lightObject.fillProxy = setmetatable({ -- Fill proxy is used to forward fill property changes to normal object
+	lightObject.fillProxy = setmetatable({ -- Fill proxy is used to forward fill property changes to normal object too.
 		normalObject = lightObject.normalObject,
 		fill = nil, -- Is set during metatable query
-		effectProxy = setmetatable({
+		effectProxy = setmetatable({ -- Effect proxy is the same, forward effect property changes to normal effect.effect, as normal objects can use up to two shaders.
 			normalObject = lightObject.normalObject,
 			effect = nil,
 		}, effectProxyMetatable)

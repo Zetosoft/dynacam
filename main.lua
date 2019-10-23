@@ -194,8 +194,7 @@ local function addPlayerCharacter()
 	local ship = dynacam.newImage("images/spaceship_carrier_01.png", "images/spaceship_carrier_01_n.png")
 	ship.fill.effect = "filter.pixelate"
 	ship.fill.effect.numPixels = 8
-	transition.to(ship.fill.effect, {time = 10000, numPixels = 1,})
-	transition.to(ship.normal.effect.effect, {time = 10000, numPixels = 1,}) -- TODO: this is impractical
+	transition.to(ship.fill.effect, {time = 10000, numPixels = 1,}) -- Single transition
 	pCharacter:insert(ship)
 	pCharacter.ship = ship
 	

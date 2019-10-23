@@ -31,18 +31,32 @@ local meshPathEntangleMetatable = { -- used to intercept mesh path functions and
 	end
 }
 
+local effectProxyMetatable = {
+	__index = function(self, index)
+		return self.effect[index]
+	end,
+	__newindex = function(self, index, value)
+		if self.normalObject.fill.effect.effect then -- Update normal version of effect (Indexed at .effect)
+			self.normalObject.fill.effect.effect[index] = value
+		end
+		
+		self.effect[index] = value
+	end,
+}
+
 local fillProxyMetatable = { -- Used to intercept .fill transform changes and replicate to normal
 	__index = function(self, index)
-		if index == "effect" then -- TODO: return effect proxy?
-			
+		if index == "effect" then
+			rawset(self.effectProxy, "effect", self.fill.effect)
+			return self.effectProxy -- Effect proxy can now be modified
 		end
 		return self.fill[index]
 	end,
 	__newindex = function(self, index, value)
-		if index ~= "effect" then
-			self.normalObject.fill[index] = value
-		else
+		if index == "effect" then -- Get same effect in normal variant
 			self.normalObject.fill.effect = normalShaders.getEffect(value)
+		else -- x, y, scaleX, scaleY, colors, etc
+			self.normalObject.fill[index] = value
 		end
 		
 		self.fill[index] = value
@@ -54,7 +68,8 @@ local entangleMetatable = {
 		if index == "parentRotation" then -- .parent can be nil apparently when deleting object
 			return self.parent and self.parent.viewRotation -- Will be nil once we hit normal objects in hierarchy
 		elseif index == "fill" then
-			rawset(self.fillProxy, "fill", self._oldMeta.__index(self, index)) -- Update original fill reference in proxy, skipping metamethods
+			rawset(self.fillProxy, "fill", self._oldMeta.__index(self, index)) -- Update original fill & normal reference in proxy, skipping metamethods
+			rawset(self.fillProxy, "normal", self.normalObject.fill)
 			return self.fillProxy -- Fill proxy can now be modified
 		elseif index == "normal" then
 			return self.normalObject.fill
@@ -166,6 +181,10 @@ local function entangleObject(lightObject) -- Basic light object principle, wher
 	lightObject.fillProxy = setmetatable({ -- Fill proxy is used to forward fill property changes to normal object
 		normalObject = lightObject.normalObject,
 		fill = nil, -- Is set during metatable query
+		effectProxy = setmetatable({
+			normalObject = lightObject.normalObject,
+			effect = nil,
+		}, effectProxyMetatable)
 	}, fillProxyMetatable)
 	
 	for fIndex = 1, #FUNCTIONS.DISPLAY do

@@ -1,10 +1,8 @@
 ---------------------------------------------- Quantum - Light object creation - Basilio Germán
-local moduleParams = ...
-local moduleName = moduleParams.name or moduleParams
-local requirePath = moduleParams.path or ""
-local projectPath = string.gsub(requirePath, "%.", "/")
+local moduleName = ...
+local upRequire = string.match(moduleName or "", "(.*[%.])") or ""
 
-local normalShaders = require(requirePath.."shaders.normal")
+local normalShaders = require(upRequire.."shaders.normal")
 
 local quantum = {}
 ---------------------------------------------- Constants

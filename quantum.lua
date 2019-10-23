@@ -24,10 +24,10 @@ local meshPathEntangleMetatable = { -- used to intercept mesh path functions and
 		if index == "path" then
 			return self.pathFunctions
 		end
-		return self._oldMetaMesh.__index(self, index)
+		return self._superMetaMesh.__index(self, index)
 	end,
 	__newindex = function(self, index, value)
-		self._oldMetaMesh.__newindex(self, index, value)
+		self._superMetaMesh.__newindex(self, index, value)
 	end
 }
 
@@ -68,7 +68,7 @@ local entangleMetatable = {
 		if index == "parentRotation" then -- .parent can be nil apparently when deleting object
 			return self.parent and self.parent.viewRotation -- Will be nil once we hit normal objects in hierarchy
 		elseif index == "fill" then
-			rawset(self.fillProxy, "fill", self._oldMeta.__index(self, index)) -- Update original fill & normal reference in proxy, skipping metamethods
+			rawset(self.fillProxy, "fill", self._superMeta.__index(self, index)) -- Update original fill & normal reference in proxy, skipping metamethods
 			rawset(self.fillProxy, "normal", self.normalObject.fill)
 			return self.fillProxy -- Fill proxy can now be modified
 		elseif index == "normal" then
@@ -78,7 +78,7 @@ local entangleMetatable = {
 		elseif index == "camera" then
 			return self._camera
 		end
-		return self._oldMeta.__index(self, index)
+		return self._superMeta.__index(self, index)
 	end,
 	__newindex = function(self, index, value)
 		local normalObject = self.normalObject
@@ -118,7 +118,7 @@ local entangleMetatable = {
 			end
 		else
 			normalObject[index] = value -- Send values to entangled pair
-			self._oldMeta.__newindex(self, index, value)
+			self._superMeta.__newindex(self, index, value)
 			
 			if HIT_REFRESH[index] and rawget(self, "touchArea") then
 				local touchArea = rawget(self, "touchArea")
@@ -126,7 +126,7 @@ local entangleMetatable = {
 			end
 			
 			if index == "rotation" and value then -- Propagate rotation change
-				-- Rotation was already set in _oldMeta
+				-- Rotation was already set in _superMeta
 				self.viewRotation = (self.parentRotation or 0) + value -- parentRotation can be nil
 				
 				if self.numChildren then
@@ -172,7 +172,7 @@ local function addEventListenerPirate(self, eventName, eventFunction) -- Metatab
 			self.forwardEvents = true
 		end
 	end
-	return self._oldMeta.__index(self, "addEventListener")(self, eventName, eventFunction)
+	return self._superMeta.__index(self, "addEventListener")(self, eventName, eventFunction)
 end
 
 local function entangleObject(lightObject) -- Basic light object principle, where we make object pairs in different worlds (diffuse & normal)
@@ -197,7 +197,8 @@ local function entangleObject(lightObject) -- Basic light object principle, wher
 	
 	lightObject.addEventListenerPirate = addEventListenerPirate
 	
-	rawset(lightObject, "_oldMeta", getmetatable(lightObject))
+	local superMeta = getmetatable(lightObject)
+	rawset(lightObject, "_superMeta", superMeta)
 	setmetatable(lightObject, entangleMetatable)
 	
 	lightObject:addEventListener("finalize", finalizeEntangledObject)
@@ -327,7 +328,8 @@ function quantum.newMesh(options)
 	lightMesh.normalObject = normalMesh
 	entangleObject(lightMesh)
 	
-	rawset(lightMesh, "_oldMetaMesh", getmetatable(lightMesh))
+	local superMetaMesh = getmetatable(lightMesh)
+	rawset(lightMesh, "_superMetaMesh", superMetaMesh)
 	setmetatable(lightMesh, meshPathEntangleMetatable)
 	
 	return lightMesh

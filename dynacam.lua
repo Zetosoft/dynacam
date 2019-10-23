@@ -64,13 +64,13 @@ local rawget = rawget
 ---------------------------------------------- Metatable
 local touchMonitorMetatable = { -- Monitor transform changes
 	__index = function(self, index)
-		return self._oldMetaTouch.__index(self, index)
+		return self._superMetaTouch.__index(self, index)
 	end,
 	__newindex = function(self, index, value)
 		if TRANSFORM_PROPERTIES_MATCHER[index] then -- Replicate transform to maskObject
 			rawget(self, "maskObject")[index] = value
 		end
-		self._oldMetaTouch.__newindex(self, index, value)
+		self._superMetaTouch.__newindex(self, index, value)
 	end
 }
 ---------------------------------------------- Local functions 
@@ -203,7 +203,8 @@ local function buildMaskGroup(object, internalFlag, color)
 	
 	object.maskObject = maskObject -- Object itself will update maskObject transform, save reference
 	if internalFlag then -- Only child object need to be monitored
-		rawset(object, "_oldMetaTouch", getmetatable(object))
+		local superMetaTouch = getmetatable(object)
+		rawset(object, "_superMetaTouch", superMetaTouch)
 		setmetatable(object, touchMonitorMetatable)
 		
 		object:addEventListener("finalize", finalizeMaskedObject) -- TODO: maybe add another finalize listener to maskObject?

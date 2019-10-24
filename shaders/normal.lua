@@ -1,11 +1,27 @@
 ---------------------------------------------- Normal shader factory - Fuse rotate shader with any other effect
 local normal = {}
-
+----------------------------------------------
 local normalEffects = {}
 
+local existTested = {}
+---------------------------------------------- Local functions
+local function effectExists(effectName)
+	local exists = false
+	
+	if existTested[effectName] == nil then
+		local testRect = display.newRect(0, 0, 1, 1)
+		testRect.fill.effect = effectName
+		existTested[effectName] = testRect.fill.effect ~= nil
+		display.remove(testRect)
+	end
+	
+	return existTested[effectName]
+end
+---------------------------------------------- Module functions
 function normal.getEffect(effectName)
-	if effectName then
+	if effectName and effectExists(effectName) then
 		local internalName = string.gsub(effectName, "%.", "")
+		
 		if not normalEffects[effectName] then
 			local kernel = {}
 

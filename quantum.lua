@@ -218,7 +218,7 @@ local function lightInsert(self, lightObject)
 	lightObject.parentRotation = self.viewRotation -- Let metatable update efefct
 end
 ---------------------------------------------- Module functions
-function quantum.newLight(options) -- Only meant to be used internally by dynacam, or will fail to be updated
+function quantum.newLight(options, debugLight) -- Only meant to be used internally by dynacam, or will fail to be updated
 	options = options or {}
 	
 	local z = options.z or DEFAULT_Z
@@ -230,7 +230,7 @@ function quantum.newLight(options) -- Only meant to be used internally by dynaca
 	light.normalObject = display.newGroup()
 	
 	light.debug = display.newCircle(light, 0, 0, 5)
-	light.debug.isVisible = options.debug
+	light.debug.isVisible = debugLight
 	
 	entangleObject(light)
 	

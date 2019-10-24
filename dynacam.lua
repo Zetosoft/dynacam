@@ -491,11 +491,7 @@ local function cameraTrackLight(self, light)
 end
 
 local function cameraNewLight(self, options)
-	if self.values.debug then
-		options.debug = true
-	end
-	
-	local light = quantum.newLight(options)
+	local light = quantum.newLight(options, self.values.debug)
 	self:trackLight(light)
 	
 	return light

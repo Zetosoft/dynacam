@@ -244,7 +244,7 @@ local function cameraEnterFrame(self, event)
 	
 	-- Handle focus
 	if self.values.focus then
-		targetRotation = self.values.trackRotation and -self.values.focus.rotation or self.rotation
+		targetRotation = self.values.trackRotation and -self.values.focus.rotation or self.values.targetRotation
 		
 		-- Damp and apply rotation
 		self.diffuseView.rotation = (self.diffuseView.rotation - (self.diffuseView.rotation - targetRotation) * self.values.dampingRatio)
@@ -607,6 +607,9 @@ function dynacam.newCamera(options)
 		maxX = mathHuge,
 		minY = -mathHuge,
 		maxY = mathHuge,
+		
+		-- Camera rotation 
+		targetRotation = 0,
 		
 		-- Damping & internal stuff
 		damping = damping, -- Can be used to transition

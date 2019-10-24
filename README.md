@@ -16,7 +16,7 @@ The Dynamic lighting camera system adds dynamic lighting and full camera trackin
 - groups can be inserted into lightGroups, but not the other way around.
 
 ### Gotchas
-- Because objects are drawn to a canvas, and the graphics engine "owns" these objects, Touch, tap and mouse listeners are forwarded using mirror groups that sit on front of the canvas. Complex, large groups will make the engine stutter if the hierarchy is too dynamic (Objects deleted, created, moved constantly).
+- Because objects are drawn to a canvas, and the graphics engine "owns" these objects, Touch, tap and mouse listeners are forwarded using mirror groups that sit on front of the canvas. Complex, large groups will make the engine stutter if the hierarchy is too dynamic (Objects deleted, created, moved or scaled constantly).
 
 ### Functions
 ---
@@ -98,7 +98,8 @@ The Dynamic lighting camera system adds dynamic lighting and full camera trackin
 
 - *lightObject*
     - lightObject.*normal* (paint) : Supports any paint like *lightObject.fill*, but is intended for normal maps. A normal map rotation fix effect is placed by default, if removed, normal maps will stop illuminating correctly if rotated!
-
+- *cameraObject*
+    - cameraObject.values.*targetRotation* (number) : Use this value to manually rotate the internal camera view.
 
 ---
 Copyright (c) 2019, Basilio Germán

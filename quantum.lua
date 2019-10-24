@@ -50,8 +50,10 @@ local effectProxyMetatable = {
 local fillProxyMetatable = { -- Used to intercept .fill transform changes and replicate to normal
 	__index = function(self, index)
 		if index == "effect" then
-			rawset(self.effectProxy, "effect", self.fill.effect)
-			return self.effectProxy -- Effect proxy can now be modified
+			if self.fill.effect then
+				rawset(self.effectProxy, "effect", self.fill.effect)
+				return self.effectProxy -- Effect proxy can now be modified
+			end
 		end
 		return self.fill[index]
 	end,

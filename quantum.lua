@@ -29,13 +29,31 @@ local quantum = {
 local DEFAULT_NORMAL = {0.5, 0.5, 1.0}
 local DEFAULT_Z = 0.2
 local DEFAULT_ATTENUATION = {0.4, 3, 20}
+local DEFAULT_LIGHT_COLOR = {1, 1, 1, 1}
 
-local FUNCTIONS_DISPLAY = {"rotate", "scale", "setMask", "toBack", "toFront", "translate", "removeSelf"}
+local FUNCTIONS_DISPLAY = {
+	["rotate"] = true, 
+	["scale"] = true, 
+	["setMask"] = true, 
+	["toBack"] = true, 
+	["toFront"] = true, 
+	["translate"] = true, 
+	["removeSelf"] = true,
+}
 local FUNCTIONS = {
 	DISPLAY = FUNCTIONS_DISPLAY,
-	SPRITE = quantum.utils.merge(FUNCTIONS_DISPLAY, {"play", "pause", "setFrame", "setSequence"}),
-	SNAPSHOT = quantum.utils.merge(FUNCTIONS_DISPLAY, {"invalidate"}),
-	LINE = quantum.utils.merge(FUNCTIONS_DISPLAY, {"append"}),
+	SPRITE = quantum.utils.merge(FUNCTIONS_DISPLAY, {
+		["play"] = true, 
+		["pause"] = true, 
+		["setFrame"] = true, 
+		["setSequence"] = true
+	}),
+	SNAPSHOT = quantum.utils.merge(FUNCTIONS_DISPLAY, {
+			["invalidate"] = true
+	}),
+	LINE = quantum.utils.merge(FUNCTIONS_DISPLAY, {
+			["append"] = true
+	}),
 }
 
 local HIT_REFRESH = {
@@ -90,6 +108,25 @@ local fillProxyMetatable = { -- Used to intercept .fill transform changes and re
 	end,
 }
 
+local inheritFunction = setmetatable({
+	object = nil,
+	index = nil,
+}, {
+	__call = function(self, object, ...)
+		if object == self.object then
+			if object.normalObject then
+				object.normalObject[self.index](object.normalObject, ...)
+			end
+			
+			local superFunction = object._superMeta.__index(object, self.index)
+
+			return superFunction(object, ...)
+		else
+			print("LOL")
+		end
+	end,
+})
+
 local entangleMetatable = {
 	__index = function(self, index)
 		if index == "parentRotation" then -- .parent can be nil apparently when deleting object
@@ -105,6 +142,17 @@ local entangleMetatable = {
 		elseif index == "camera" then
 			return self._camera
 		end
+		
+		if self.entangleFunctions[index] then
+			if type(self.entangleFunctions[index]) == "function" then
+				return self.entangleFunctions[index]
+			end
+			
+			rawset(inheritFunction, "object", self)
+			rawset(inheritFunction, "index", index)
+			return inheritFunction
+		end
+		
 		return self._superMeta.__index(self, index)
 	end,
 	__newindex = function(self, index, value)
@@ -178,19 +226,6 @@ local function finalizeEntangledObject(event)
 	lightObject.normalObject = nil
 end
 
-local function entangleFunction(object, functionIndex)
-	local originalFunction = object[functionIndex]
-	
-	object["_"..functionIndex] = originalFunction
-	rawset(object, functionIndex, function(self, ...)
-		self["_"..functionIndex](self, ...)
-		
-		if self.normalObject then
-			self.normalObject[functionIndex](self.normalObject, ...)
-		end
-	end)
-end
-
 local function addEventListenerPirate(self, eventName, eventFunction) -- Metatable called function
 	if eventName == "tap" or eventName == "touch" or eventName == "mouse" then
 		if self.camera then
@@ -202,7 +237,9 @@ local function addEventListenerPirate(self, eventName, eventFunction) -- Metatab
 	return self._superMeta.__index(self, "addEventListener")(self, eventName, eventFunction)
 end
 
-local function entangleObject(lightObject) -- Basic light object principle, where we make object pairs in different worlds (diffuse & normal)
+local function entangleObject(lightObject, entangleFunctions) -- Basic light object principle, where we make object pairs in different worlds (diffuse & normal)
+	entangleFunctions = entangleFunctions or FUNCTIONS.DISPLAY
+	
 	lightObject.viewRotation = 0
 	
 	-- Fill & Effect are replaced by proxies that forward  set values to diffuse and normal objects at the same time.
@@ -218,10 +255,8 @@ local function entangleObject(lightObject) -- Basic light object principle, wher
 	}
 	lightObject.fillProxy = setmetatable(fillProxy, fillProxyMetatable)
 	
-	
-	
-	
 	lightObject.addEventListenerPirate = addEventListenerPirate
+	lightObject.entangleFunctions = entangleFunctions
 	
 	local superMeta = getmetatable(lightObject)
 	rawset(lightObject, "_superMeta", superMeta)
@@ -243,7 +278,7 @@ function quantum.newLight(options, debugLight) -- Only meant to be used internal
 	options = options or {}
 	
 	local z = options.z or DEFAULT_Z
-	local color = options.color or {1, 1, 1, 1} -- New instance of white
+	local color = options.color or DEFAULT_LIGHT_COLOR -- New instance of white
 	local scale = options.scale or 1
 	local attenuationFactors = options.attenuationFactors or DEFAULT_ATTENUATION -- Default attenuation here as we don't have table copy
 	
@@ -420,13 +455,12 @@ function quantum.newLightObject(diffuseObject, normalObject, entangleFunctions)
 	entangleFunctions = entangleFunctions or {}
 	
 	diffuseObject.normalObject = normalObject
-	diffuseObject.entangleFunctions = entangleFunctions
 	
 	if normalObject.fill then
 		normalObject.fill.effect = normalShaders.getEffect() -- Default normal shader
 	end
 	
-	entangleObject(diffuseObject)
+	entangleObject(diffuseObject, entangleFunctions)
 	
 	return diffuseObject
 end

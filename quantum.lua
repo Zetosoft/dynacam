@@ -4,16 +4,38 @@ local upRequire = string.match(moduleName or "", "(.*[%.])") or ""
 
 local normalShaders = require(upRequire.."shaders.normal")
 
-local quantum = {}
+local quantum = {
+	utils = {
+		copy = function(fTable) -- Simple copy
+			local copy = {}
+			for key, value in pairs(fTable) do
+				copy[key] = value
+			end
+			return copy
+		end,
+		merge = function(table1, table2) -- Simple merge
+			local result = {}
+			for key, value in pairs(table1) do
+				result[key] = value
+			end
+			for key, value in pairs(table2) do
+				result[key] = value
+			end
+			return result
+		end,
+	}
+}
 ---------------------------------------------- Constants
 local DEFAULT_NORMAL = {0.5, 0.5, 1.0}
 local DEFAULT_Z = 0.2
+local DEFAULT_ATTENUATION = {0.4, 3, 20}
 
+local FUNCTIONS_DISPLAY = {"rotate", "scale", "setMask", "toBack", "toFront", "translate", "removeSelf"}
 local FUNCTIONS = {
-	SPRITE = {"play", "pause", "setFrame", "setSequence"},
-	SNAPSHOT = {"invalidate"},
-	LINE = {"append"},
-	DISPLAY = {"rotate", "scale", "setMask", "toBack", "toFront", "translate", "removeSelf"},
+	DISPLAY = FUNCTIONS_DISPLAY,
+	SPRITE = quantum.utils.merge(FUNCTIONS_DISPLAY, {"play", "pause", "setFrame", "setSequence"}),
+	SNAPSHOT = quantum.utils.merge(FUNCTIONS_DISPLAY, {"invalidate"}),
+	LINE = quantum.utils.merge(FUNCTIONS_DISPLAY, {"append"}),
 }
 
 local HIT_REFRESH = {
@@ -196,9 +218,8 @@ local function entangleObject(lightObject) -- Basic light object principle, wher
 	}
 	lightObject.fillProxy = setmetatable(fillProxy, fillProxyMetatable)
 	
-	for fIndex = 1, #FUNCTIONS.DISPLAY do
-		entangleFunction(lightObject, FUNCTIONS.DISPLAY[fIndex])
-	end
+	
+	
 	
 	lightObject.addEventListenerPirate = addEventListenerPirate
 	
@@ -224,7 +245,7 @@ function quantum.newLight(options, debugLight) -- Only meant to be used internal
 	local z = options.z or DEFAULT_Z
 	local color = options.color or {1, 1, 1, 1} -- New instance of white
 	local scale = options.scale or 1
-	local attenuationFactors = options.attenuationFactors or {0.4, 3, 20} -- Default attenuation here as we don't have table copy
+	local attenuationFactors = options.attenuationFactors or DEFAULT_ATTENUATION -- Default attenuation here as we don't have table copy
 	
 	local light = display.newGroup()
 	light.normalObject = display.newGroup()
@@ -237,8 +258,8 @@ function quantum.newLight(options, debugLight) -- Only meant to be used internal
 	light.position = {0, 0, z} -- Internal table, auto updates for fast shader data pass
 	light.scale = scale
 	light.z = z
-	light.attenuationFactors = attenuationFactors
-	light.color = color
+	light.attenuationFactors = quantum.utils.copy(attenuationFactors)
+	light.color = quantum.utils.copy(color)
 	
 	return light
 end
@@ -344,7 +365,7 @@ function quantum.newPolygon(x, y, vertices)
 	local lightPolygon = display.newPolygon(x, y, vertices)
 	local normalPolygon = display.newPolygon(x, y, vertices)
 	
-	lightPolygon.vertices = vertices -- Save vertices in case of touch listener mask rebuild
+	lightPolygon.vertices = quantum.utils.copy(vertices) -- Save vertices in case of touch listener mask rebuild
 	
 	return quantum.newLightObject(lightPolygon, normalPolygon)
 end
@@ -368,7 +389,7 @@ end
 
 function quantum.newText(options)
 	options = options or {}
-	local normal = options.normal or {0.5, 0.5, 1.0}
+	local normal = options.normal or quantum.utils.copy(DEFAULT_NORMAL)
 	
 	local lightText = display.newText(options)
 	local normalText = display.newText(options)
@@ -397,14 +418,12 @@ end
 -- Used internally to create lightObjects
 function quantum.newLightObject(diffuseObject, normalObject, entangleFunctions)
 	entangleFunctions = entangleFunctions or {}
-	diffuseObject.normalObject = normalObject
 	
-	for fIndex = 1, #entangleFunctions do
-		entangleFunction(diffuseObject, entangleFunctions[fIndex])
-	end
+	diffuseObject.normalObject = normalObject
+	diffuseObject.entangleFunctions = entangleFunctions
 	
 	if normalObject.fill then
-		normalObject.fill.effect = normalShaders.getEffect()
+		normalObject.fill.effect = normalShaders.getEffect() -- Default normal shader
 	end
 	
 	entangleObject(diffuseObject)

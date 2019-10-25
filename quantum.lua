@@ -25,6 +25,27 @@ local quantum = {
 		end,
 	}
 }
+---------------------------------------------- Local functions 1
+local function lightInsert(self, lightObject)
+	self.super:insert(lightObject)
+	
+	self.normalObject:insert(lightObject.normalObject)
+	
+	lightObject.camera = self.camera
+	lightObject.parentRotation = self.viewRotation -- Let metatable update efefct
+end
+
+local function monitorAddedEvents(self, eventName, eventFunction) -- Metatable called function
+	if eventName == "tap" or eventName == "touch" or eventName == "mouse" then
+		if self.camera then
+			self.camera:addListenerObject(self)
+		else
+			self.forwardEvents = true
+		end
+	end
+	
+	return self.super:addEventListener(eventName, eventFunction)
+end
 ---------------------------------------------- Constants
 local DEFAULT_NORMAL = {0.5, 0.5, 1.0}
 local DEFAULT_Z = 0.2
@@ -39,6 +60,7 @@ local FUNCTIONS_DISPLAY = {
 	["toFront"] = true, 
 	["translate"] = true, 
 	["removeSelf"] = true,
+	["addEventListener"] = monitorAddedEvents,
 }
 local FUNCTIONS = {
 	DISPLAY = FUNCTIONS_DISPLAY,
@@ -49,11 +71,15 @@ local FUNCTIONS = {
 		["setSequence"] = true
 	}),
 	SNAPSHOT = quantum.utils.merge(FUNCTIONS_DISPLAY, {
-			["invalidate"] = true
+			["invalidate"] = true,
+			["insert"] = lightInsert,
 	}),
 	LINE = quantum.utils.merge(FUNCTIONS_DISPLAY, {
 			["append"] = true
 	}),
+	GROUP = quantum.utils.merge(FUNCTIONS_DISPLAY, {
+		["insert"] = lightInsert,
+	})
 }
 
 local HIT_REFRESH = {
@@ -137,8 +163,6 @@ local entangleMetatable = {
 			return self.fillProxy -- Fill proxy can now be modified
 		elseif index == "normal" then
 			return self.normalObject.fill
-		elseif index == "addEventListener" then
-			return self.addEventListenerPirate
 		elseif index == "camera" then
 			return self._camera
 		end
@@ -226,17 +250,6 @@ local function finalizeEntangledObject(event)
 	lightObject.normalObject = nil
 end
 
-local function addEventListenerPirate(self, eventName, eventFunction) -- Metatable called function
-	if eventName == "tap" or eventName == "touch" or eventName == "mouse" then
-		if self.camera then
-			self.camera:addListenerObject(self)
-		else
-			self.forwardEvents = true
-		end
-	end
-	return self._superMeta.__index(self, "addEventListener")(self, eventName, eventFunction)
-end
-
 local function entangleObject(lightObject, entangleFunctions) -- Basic light object principle, where we make object pairs in different worlds (diffuse & normal)
 	entangleFunctions = entangleFunctions or FUNCTIONS.DISPLAY
 	
@@ -255,7 +268,6 @@ local function entangleObject(lightObject, entangleFunctions) -- Basic light obj
 	}
 	lightObject.fillProxy = setmetatable(fillProxy, fillProxyMetatable)
 	
-	lightObject.addEventListenerPirate = addEventListenerPirate
 	lightObject.entangleFunctions = entangleFunctions
 	
 	local superMeta = getmetatable(lightObject)
@@ -263,15 +275,6 @@ local function entangleObject(lightObject, entangleFunctions) -- Basic light obj
 	setmetatable(lightObject, entangleMetatable)
 	
 	lightObject:addEventListener("finalize", finalizeEntangledObject)
-end
-
-local function lightInsert(self, lightObject)
-	self:diffuseInsert(lightObject)
-	self.normalObject:insert(lightObject.normalObject)
-	
-	lightObject.camera = self.camera
-	
-	lightObject.parentRotation = self.viewRotation -- Let metatable update efefct
 end
 ---------------------------------------------- Module functions
 function quantum.newLight(options, debugLight) -- Only meant to be used internally by dynacam, or will fail to be updated
@@ -303,10 +306,7 @@ function quantum.newGroup()
 	local lightGroup = display.newGroup()
 	lightGroup.normalObject = display.newGroup()
 	
-	lightGroup.diffuseInsert = lightGroup.insert
-	lightGroup.insert = lightInsert
-	
-	entangleObject(lightGroup)
+	entangleObject(lightGroup, FUNCTIONS.GROUP)
 	
 	return lightGroup
 end
@@ -322,10 +322,7 @@ function quantum.newContainer(width, height)
 	local lightContainer = display.newContainer(width, height)
 	lightContainer.normalObject = display.newContainer(width, height)
 	
-	lightContainer.diffuseInsert = lightContainer.insert
-	lightContainer.insert = lightInsert
-	
-	entangleObject(lightContainer)
+	entangleObject(lightContainer, FUNCTIONS.GROUP)
 	
 	return lightContainer
 end
@@ -415,9 +412,6 @@ end
 function quantum.newSnapshot(width, height)
 	local lightSnapshot = display.newSnapshot(width, height)
 	local normalSnapshot = display.newSnapshot(width, height)
-	
-	lightSnapshot.diffuseInsert = lightSnapshot.insert
-	lightSnapshot.insert = lightInsert
 	
 	return quantum.newLightObject(lightSnapshot, normalSnapshot, FUNCTIONS.SNAPSHOT)
 end

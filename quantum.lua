@@ -478,8 +478,6 @@ end
 
 -- Used internally to create lightObjects
 function quantum.newLightObject(diffuseObject, normalObject, entangleFunctions)
-	entangleFunctions = entangleFunctions or {}
-	
 	diffuseObject.normalObject = normalObject
 	
 	if normalObject.fill then

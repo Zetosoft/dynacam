@@ -28,7 +28,6 @@ local quantum = {
 ---------------------------------------------- Local functions 1
 local function lightInsert(self, lightObject)
 	self.super:insert(lightObject)
-	
 	self.normalObject:insert(lightObject.normalObject)
 	
 	lightObject.camera = self.camera
@@ -134,7 +133,7 @@ local fillProxyMetatable = { -- Used to intercept .fill transform changes and re
 	end,
 }
 
-local inheritFunction = setmetatable({
+local dualityFunction = setmetatable({
 	object = nil,
 	index = nil,
 }, {
@@ -153,6 +152,36 @@ local inheritFunction = setmetatable({
 	end,
 })
 
+local inheritFunction = setmetatable({
+	object = nil,
+	index = nil,
+}, {
+	__call = function(self, inheritTable, ...)
+		if inheritTable.object == self.object then
+			local superFunction = self.object._superMeta.__index(self.object, self.index)
+			return superFunction(self.object, ...)
+		else
+			
+		end
+	end,
+})
+
+local inheritTable = setmetatable({
+	object = nil,
+}, {
+	__index = function(self, index)
+		local objectValue = self.object._superMeta.__index(self.object, index)
+		
+		if type(objectValue) == "function" then
+			rawset(inheritFunction, "object", self.object)
+			rawset(inheritFunction, "index", index)
+			return inheritFunction
+		end
+		
+		return objectValue
+	end,
+})
+
 local entangleMetatable = {
 	__index = function(self, index)
 		if index == "parentRotation" then -- .parent can be nil apparently when deleting object
@@ -165,6 +194,9 @@ local entangleMetatable = {
 			return self.normalObject.fill
 		elseif index == "camera" then
 			return self._camera
+		elseif index == "super" then
+			rawset(inheritTable, "object", self) -- Skip metatable
+			return inheritTable
 		end
 		
 		if self.entangleFunctions[index] then
@@ -172,9 +204,9 @@ local entangleMetatable = {
 				return self.entangleFunctions[index]
 			end
 			
-			rawset(inheritFunction, "object", self)
-			rawset(inheritFunction, "index", index)
-			return inheritFunction
+			rawset(dualityFunction, "object", self)
+			rawset(dualityFunction, "index", index)
+			return dualityFunction
 		end
 		
 		return self._superMeta.__index(self, index)

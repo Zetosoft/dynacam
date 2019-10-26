@@ -98,6 +98,7 @@ The Dynamic lighting camera system adds dynamic lighting and full camera trackin
 
 - *lightObject*
     - lightObject.*normal* (paint) : Supports any paint like *lightObject.fill*, but is intended for normal maps. A normal map rotation fix effect is placed by default, if removed, normal maps will stop illuminating correctly if rotated!
+	- lightObject.*super* (table) : Table to call default display object functions that only affect the diffuse part of the object. for example: `lightObject.super:insert(otherObject)`
 - *cameraObject*
     - cameraObject.values.*targetRotation* (number) : Use this value to manually rotate the internal camera view.
 

@@ -266,7 +266,7 @@ local function addTestOther()
 	dLine:append(2050, 1100)
 	dLine:append(1550, 350)
 	dLine.strokeWidth = 10
-	mapGroup:diffuseInsert(dLine) -- Used to insert displayObjects
+	mapGroup.super:insert(dLine) -- Used to insert displayObjects
 	
 	-- Line without lighting
 	local dAddLine = display.newLine(300, 0, 1300, 1000)

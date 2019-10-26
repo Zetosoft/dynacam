@@ -26,6 +26,8 @@ local rotationX, rotationY
 local initialized
 local cameras
 ---------------------------------------------- Constants
+local CULL_LIMIT_MIN = -0.4
+local CULL_LIMIT_MAX = 1.4
 local RADIANS_MAGIC = math.pi / 180 -- Used to convert degrees to radians
 local DEFAULT_ATTENUATION = {0.4, 3, 20}
 local DEFAULT_AMBIENT_LIGHT = {0, 0, 0, 1}
@@ -319,16 +321,18 @@ local function cameraEnterFrame(self, event)
 			light.position[2] = (y) * vchr + 0.5
 			light.position[3] = light.z
 			
-			local lightDrawer = display.newRect(0, 0, vcw, vch)
-			lightDrawer.fill = {type = "image", filename = self.normalBuffer.filename, baseDir = self.normalBuffer.baseDir}
-			lightDrawer.fill.blendMode = "add"
-			lightDrawer.fill.effect = "filter.custom.light"
-			lightDrawer.fill.effect.pointLightPos = light.position
-			lightDrawer.fill.effect.pointLightColor = light.color
-			lightDrawer.fill.effect.attenuationFactors = light.attenuationFactors or DEFAULT_ATTENUATION
-			lightDrawer.fill.effect.pointLightScale = 1 / (self.values.zoom * light.scale * SCALE_LIGHTS) -- TODO: implement light.inverseScale -- (1 / scale)
-			
-			self.lightDrawers:insert(lightDrawer)
+			if (light.position[1] >= CULL_LIMIT_MIN) and (light.position[1] <= CULL_LIMIT_MAX) and (light.position[2] >= CULL_LIMIT_MIN) and (light.position[1] <= CULL_LIMIT_MAX) then
+				local lightDrawer = display.newRect(0, 0, vcw, vch)
+				lightDrawer.fill = {type = "image", filename = self.normalBuffer.filename, baseDir = self.normalBuffer.baseDir}
+				lightDrawer.fill.blendMode = "add"
+				lightDrawer.fill.effect = "filter.custom.light"
+				lightDrawer.fill.effect.pointLightPos = light.position
+				lightDrawer.fill.effect.pointLightColor = light.color
+				lightDrawer.fill.effect.attenuationFactors = light.attenuationFactors or DEFAULT_ATTENUATION
+				lightDrawer.fill.effect.pointLightScale = 1 / (self.values.zoom * light.scale * SCALE_LIGHTS) -- TODO: implement light.inverseScale -- (1 / scale)
+				
+				self.lightDrawers:insert(lightDrawer)
+			end
 		end
 	end
 	self.lightBuffer:draw(self.lightDrawers)

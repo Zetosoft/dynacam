@@ -9,9 +9,15 @@ require(requirePath.."shaders.apply")
 require(requirePath.."shaders.light")
 
 local quantum = require(requirePath.."quantum")
+local CoronaLibrary = require("CoronaLibrary")
 local physics = require("physics")
 
-local dynacam = setmetatable({}, { -- Quantum provides object creation
+local dynacam = setmetatable(CoronaLibrary:new({
+	name = "dynacam",
+	publisherId="com.zetosoft",
+	version = 1,
+	revision = 1,
+}), { -- Quantum provides object creation
 	__index = function(self, index)
 		return quantum[index]
 	end,
@@ -305,8 +311,23 @@ local function cameraEnterFrame(self, event)
 	self.normalBuffer:invalidate({accumulate = self.values.accumulateBuffer})
 	
 	-- Handle lights
-	for lIndex = self.lightDrawers.numChildren, 1, -1  do
-		display.remove(self.lightDrawers[lIndex])
+	if self.lightDrawers.numChildren ~= #self.lights then
+		local diff = #self.lights - self.lightDrawers.numChildren
+		
+		if diff > 0 then -- Create
+			for aIndex = 1, diff do 
+				local lightDrawer = display.newRect(0, 0, vcw, vch)
+				lightDrawer.fill = {type = "image", filename = self.normalBuffer.filename, baseDir = self.normalBuffer.baseDir}
+				lightDrawer.fill.blendMode = "add"
+				lightDrawer.fill.effect = "filter.custom.light"
+				self.lightDrawers:insert(lightDrawer)
+			end
+		elseif diff < 0 then -- Remove
+			local target = self.lightDrawers.numChildren + diff + 1
+			for rIndex = self.lightDrawers.numChildren, target, -1 do
+				display.remove(self.lightDrawers[rIndex])
+			end
+		end
 	end
 	
 	for lIndex = #self.lights, 1, -1 do
@@ -321,18 +342,13 @@ local function cameraEnterFrame(self, event)
 			light.position[2] = (y) * vchr + 0.5
 			light.position[3] = light.z
 			
-			if (light.position[1] >= CULL_LIMIT_MIN) and (light.position[1] <= CULL_LIMIT_MAX) and (light.position[2] >= CULL_LIMIT_MIN) and (light.position[1] <= CULL_LIMIT_MAX) then
-				local lightDrawer = display.newRect(0, 0, vcw, vch)
-				lightDrawer.fill = {type = "image", filename = self.normalBuffer.filename, baseDir = self.normalBuffer.baseDir}
-				lightDrawer.fill.blendMode = "add"
-				lightDrawer.fill.effect = "filter.custom.light"
+--			if (light.position[1] >= CULL_LIMIT_MIN) and (light.position[1] <= CULL_LIMIT_MAX) and (light.position[2] >= CULL_LIMIT_MIN) and (light.position[1] <= CULL_LIMIT_MAX) then
+				local lightDrawer = self.lightDrawers[lIndex]
 				lightDrawer.fill.effect.pointLightPos = light.position
 				lightDrawer.fill.effect.pointLightColor = light.color
 				lightDrawer.fill.effect.attenuationFactors = light.attenuationFactors or DEFAULT_ATTENUATION
 				lightDrawer.fill.effect.pointLightScale = 1 / (self.values.zoom * light.scale * SCALE_LIGHTS) -- TODO: implement light.inverseScale -- (1 / scale)
-				
-				self.lightDrawers:insert(lightDrawer)
-			end
+--			end
 		end
 	end
 	self.lightBuffer:draw(self.lightDrawers)

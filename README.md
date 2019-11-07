@@ -4,6 +4,9 @@
 
 The Dynamic lighting camera system adds dynamic lighting and full camera tracking to your game using normal maps and light objects
 
+Dynamic Lights + Camera
+Feel that your game needs to expand beyond the screen limits? Want to add dynamic lighting effects to your game? This is the plugin for you.
+
 ### Notes
 
 - **dynacam.*** can only track *lightObject* type objects

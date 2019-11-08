@@ -4,7 +4,7 @@
 
 Dynamic Lights + Camera
 
-Feel that your game needs to expand beyond the screen limits? Want to add dynamic lighting effects to your game? This is the plugin for you.
+Feel that your game needs to expand beyond the default screen limits? Want to add dynamic lighting effects to your game? Want to add split screen to your game? This is the plugin for you.
 This plugin adds dynamic lighting and full camera tracking to your game using normal maps and light objects.
 
 ### Notes
@@ -26,9 +26,12 @@ This plugin adds dynamic lighting and full camera tracking to your game using no
 ---
 
 - dynacam.*
-	- dynacam.*newCamera(**options**)* : Returns new *cameraObject*
+	- dynacam.*newCamera(**options**)* : Returns new *cameraObject*, all properties are optional
 		- **options.damping** (number) Number specifying damping. Higher value means slower camera tracking. Default is 10
 		- **options.ambientLightColor** (table) 4 Indexed table specifying RGB and intensity respective float values. Default is black *{0, 0, 0, 1}*
+		- **options.width** (number) If specified, camera will be of specific width, or width ratio if less than 1. Full screen width is the default
+		- **options.height** (number) If specified, camera will be of specific height, or height ratio if less than 1. Full screen height is the default
+		- **options.vertices** (table) Table containing normalized (0 - 1) vertices for canvas shape. If specified, *.width* and *.height* options will be ignored.
 	- dynacam.*refresh()*
 		- Refresh internal display values in case of a viewport dimensions change
 - *cameraObject*

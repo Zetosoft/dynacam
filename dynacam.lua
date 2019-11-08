@@ -321,9 +321,15 @@ local function enterFrame(event) -- Do not refactor! performance is better
 			end
 			
 			-- Add borrowed objects, if any
-			for oIndex = 1, #camera.borrowed do
-				camera.diffuseView:insert(camera.borrowed[oIndex])
-				camera.normalView:insert(camera.borrowed[oIndex].normalObject)
+			for bIndex = #camera.borrowed, 1, -1 do
+				local borrowed = camera.borrowed[bIndex]
+				
+				if rawget(borrowed, FLAG_REMOVE) then
+					tableRemove(camera.borrowed, bIndex)
+				else
+					camera.diffuseView:insert(borrowed)
+					camera.normalView:insert(borrowed.normalObject)
+				end
 			end
 			
 			-- Prepare buffers
@@ -574,9 +580,17 @@ local function cameraSetDrawMode(self, value)
 	end
 end
 
+local function buildPolygonCanvas(camera)
+	local cVertices = {}
+	for vIndex = 1, #camera.values.vertices do
+		local side = (vIndex % 2 == 0) and vch or vcw
+		cVertices[vIndex] = camera.values.vertices[vIndex] * side
+	end
+	camera.canvas = display.newPolygon(0, 0, cVertices)
+end
+
 local function addCameraFramebuffers(camera)
 	if camera.canvas then
-		
 		camera:insert(camera.diffuseView)
 		camera:insert(camera.normalView)
 		
@@ -592,8 +606,12 @@ local function addCameraFramebuffers(camera)
 	camera.normalBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch})
 	camera.lightBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch})
 	
-	if not camera.canvas then
-		camera.canvas = display.newRect(0, 0, vcw, vch) -- Canvas - this is what is actually shown
+	if not camera.canvas then -- Canvas - this is what is actually shown
+		if camera.values.vertices then
+			buildPolygonCanvas(camera)
+		else
+			camera.canvas = display.newRect(0, 0, vcw, vch)
+		end
 	else
 		camera.canvas.width = vcw
 		camera.canvas.height = vch
@@ -615,6 +633,27 @@ local function initialize()
 		
 		cameras = {}
 	end
+end
+
+local function setDimensions(camera, options)
+	local values = camera.values
+	
+	local oWidth = options.width
+	local oHeight = options.height
+	
+	if options.vertices then
+		values.vertices = options.vertices
+		
+		local tPolygon = display.newPolygon(0, 0, values.vertices) -- Use temp polygon to determine polygon width and height
+		oWidth = vcw * tPolygon.width
+		oHeight = vch * tPolygon.height
+		display.remove(tPolygon)
+	end
+	
+	values.vcw = oWidth
+	values.vch = oHeight
+	values.vcwr = oWidth and (1 / oWidth) or nil
+	values.vchr = oHeight and (1 / oHeight) or nil
 end
 ---------------------------------------------- Functions
 function dynacam.start()
@@ -654,11 +693,12 @@ function dynacam.newCamera(options)
 	local camera = display.newGroup()
 	
 	camera.values = {
-		-- Optional size
-		vcw = options.width,
-		vch = options.height,
-		vcwr = options.width and (1 / options.width) or nil,
-		vchr = options.height and (1 / options.height) or nil,
+		-- Size stuff set in `setDimensions()`
+		vertices = nil,
+		vcw = nil,
+		vch = nil,
+		vcwr = nil,
+		vchr = nil,
 		
 		-- Camera Limits
 		minX = -mathHuge,
@@ -684,6 +724,8 @@ function dynacam.newCamera(options)
 		trackRotation = false,
 		debug = false,
 	}
+	
+	setDimensions(camera, options)
 	
 	camera.diffuseView = display.newGroup()
 	camera.normalView = display.newGroup()

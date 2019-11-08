@@ -301,7 +301,11 @@ local function addTestOther()
 	roundedRect.normal = {type = "image", filename = FILLS[2].normal}
 	shapesGroup:insert(roundedRect)
 	
-	transition.to(roundedRect, {delay = 5000, time = 2000, alpha = 0, xScale = 1.5, yScale = 0.5, onComplete = display.remove})
+	roundedRect.normal = nil
+	
+	transition.to(roundedRect, {delay = 5000, time = 2000, alpha = 0, xScale = 1.5, yScale = 0.5, onComplete = function(o)
+		display.remove(o)
+	end})
 	
 	shapesGroup:addEventListener("tap", function(event)
 		local shapesGroup = event.target
@@ -548,18 +552,16 @@ startGame()
 
 local function crashGame()
 	
-	local wType = type(pCharacter.translate)
+	pCharacter:insert(display.newCircle(0, 0, 25))
 	
---	if pCharacter.translate == mapGroup.translate then
---		print()
---	end
+	local wut = pCharacter.translate
+--	local yyy = pCharacter.scale
 	
---	local what = pCharacter.translate
---	local otherWhat = pCharacter.scale
+	print(pCharacter.rotate)
 	
---	what(pCharacter, 5, 5)
+	wut(pCharacter, 5, 5)
 	
-	
+	print(wut == yyy)
 end
 
 crashGame()

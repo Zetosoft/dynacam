@@ -248,8 +248,10 @@ local entangleMetatable = {
 		if index == "normal" then
 			if normalObject.fill then
 				normalObject.fill = value
-				normalObject.fill.effect = normalShaders.getEffect()
-				normalObject.fill.effect.rotate.rotation = math.rad(self.viewRotation + self.fill.rotation) -- Fill might be rotated
+				if value then
+					normalObject.fill.effect = normalShaders.getEffect()
+					normalObject.fill.effect.rotate.rotation = math.rad(self.viewRotation + self.fill.rotation) -- Fill might be rotated
+				end
 			end
 		elseif index == "parentRotation" then -- Parent is telling us to update our view rotation 
 			self.viewRotation = value + self.rotation

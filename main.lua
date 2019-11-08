@@ -545,12 +545,14 @@ end
 local function initialize()
 	display.setStatusBar( display.HiddenStatusBar )
 	
-	camera1 = dynacam.newCamera({damping = 10})
-	camera1.x = display.contentCenterX - display.viewableContentWidth * 0.5
+	local hWidth = display.viewableContentWidth * 0.5
+	
+	camera1 = dynacam.newCamera({damping = 10, width = hWidth})
+	camera1.x = display.contentCenterX - display.viewableContentWidth * 0.25
 	camera1.y = display.contentCenterY
 	
-	camera2 = dynacam.newCamera({damping = 10})
-	camera2.x = display.contentCenterX + display.viewableContentWidth * 0.5
+	camera2 = dynacam.newCamera({damping = 10, width = hWidth})
+	camera2.x = display.contentCenterX + display.viewableContentWidth * 0.25
 	camera2.y = display.contentCenterY
 	
 	physics.start()

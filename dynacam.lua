@@ -334,6 +334,9 @@ local function enterFrame(event) -- Do not refactor! performance is better
 				local diff = #camera.lights - camera.lightDrawers.numChildren
 				
 				if diff > 0 then -- Create
+					local vcw = camera.values.vcw or vcw
+					local vch = camera.values.vch or vch
+					
 					for aIndex = 1, diff do 
 						local lightDrawer = display.newRect(0, 0, vcw, vch)
 						lightDrawer.fill = {type = "image", filename = camera.normalBuffer.filename, baseDir = camera.normalBuffer.baseDir}
@@ -350,6 +353,9 @@ local function enterFrame(event) -- Do not refactor! performance is better
 			end
 			
 			-- Handle lights
+			local vcwr = camera.values.vcwr or vcwr
+			local vchr = camera.values.vchr or vchr
+			
 			for lIndex = #camera.lights, 1, -1 do
 				local light = camera.lights[lIndex]
 				
@@ -573,6 +579,9 @@ local function addCameraFramebuffers(camera)
 		camera.lightBuffer:releaseSelf()
 	end
 	
+	local vcw = camera.values.vcw or vcw
+	local vch = camera.values.vch or vch
+	
 	camera.diffuseBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch})
 	camera.normalBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch})
 	camera.lightBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch})
@@ -639,6 +648,12 @@ function dynacam.newCamera(options)
 	local camera = display.newGroup()
 	
 	camera.values = {
+		-- Optional size
+		vcw = options.width,
+		vch = options.height,
+		vcwr = options.width and (1 / options.width) or nil,
+		vchr = options.height and (1 / options.height) or nil,
+		
 		-- Camera Limits
 		minX = -mathHuge,
 		maxX = mathHuge,

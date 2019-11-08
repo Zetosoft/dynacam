@@ -136,9 +136,12 @@ local fillProxyMetatable = { -- Used to intercept .fill transform changes and re
 local dualityFunction = setmetatable({
 	object = nil,
 	index = nil,
+	called = true,
 }, {
 	__call = function(self, object, ...)
 		if object == self.object then
+			self.called = true
+			
 			if object.normalObject then
 				object.normalObject[self.index](object.normalObject, ...)
 			end
@@ -146,8 +149,10 @@ local dualityFunction = setmetatable({
 			local superFunction = object._superMeta.__index(object, self.index)
 
 			return superFunction(object, ...)
+		elseif object then
+			error("ERROR: Invalid object", 2)
 		else
-			print("LOL")
+			error("ERROR: Missing object", 2)
 		end
 	end,
 })
@@ -160,8 +165,10 @@ local inheritFunction = setmetatable({
 		if inheritTable.object == self.object then
 			local superFunction = self.object._superMeta.__index(self.object, self.index)
 			return superFunction(self.object, ...)
+		elseif object then
+			error("ERROR: Invalid object", 2)
 		else
-			
+			error("ERROR: Missing object", 2)
 		end
 	end,
 })
@@ -204,8 +211,16 @@ local entangleMetatable = {
 				return self.entangleFunctions[index]
 			end
 			
+			if not dualityFunction.called then
+				if index ~= dualityFunction.index then
+					error("ERROR: Expected "..dualityFunction.index.." to be called before "..index, 2)
+				end
+			end
+			
 			rawset(dualityFunction, "object", self)
 			rawset(dualityFunction, "index", index)
+			dualityFunction.called = false
+			
 			return dualityFunction
 		end
 		

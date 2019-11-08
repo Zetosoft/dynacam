@@ -545,3 +545,16 @@ initialize()
 createWorld()
 createSliders()
 startGame()
+
+local function crashGame()
+	local wType = type(pCharacter.translate)
+	
+	local what = pCharacter.translate
+	local otherWhat = pCharacter.scale
+	
+	what(pCharacter, 5, 5)
+	
+	
+end
+
+crashGame()

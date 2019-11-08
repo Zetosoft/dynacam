@@ -313,15 +313,15 @@ local function enterFrame(event) -- Do not refactor! performance is better
 				end
 			end
 			
-			-- Prepare buffers
-			camera.lightBuffer:setBackground(0) -- Clear buffers
-			camera.diffuseBuffer:setBackground(0)
-			camera.normalBuffer:setBackground(0)
-			
 			for oIndex = 1, #camera.objects do
 				camera.diffuseView:insert(camera.objects[oIndex])
 				camera.normalView:insert(camera.objects[oIndex].normalObject)
 			end
+			
+			-- Prepare buffers
+			camera.lightBuffer:setBackground(0) -- Clear buffers
+			camera.diffuseBuffer:setBackground(0)
+			camera.normalBuffer:setBackground(0)
 			
 			camera.diffuseBuffer:draw(camera.diffuseView)
 			camera.diffuseBuffer:invalidate({accumulate = camera.values.accumulateBuffer})
@@ -472,9 +472,6 @@ end
 
 local function finalizeCamera(event)
 	local camera = event.target
-	if isTracking then
-		Runtime:removeEventListener("enterFrame", camera)
-	end
 	
 	for cIndex = 1, #cameras do -- FInd self and remove from camera lists
 		if cameras[cIndex] == camera then

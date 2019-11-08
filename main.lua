@@ -11,7 +11,8 @@ local lightData
 
 local mapGroup
 local healthBox
-local pCharacter
+local smallShip
+local controlObject
 
 local holdingKey = {
 	right = false,
@@ -68,6 +69,10 @@ local function keyListener(event)
 	end
 end
 
+local function createEdges()
+	
+end
+
 local function createBackground()
 	-- Tiles
 	local size = 500
@@ -93,7 +98,7 @@ local function addlights()
 			color = lData.color,
 		}
 		local light = camera1:newLight(lOptions)
-		camera2:trackLight(light)
+--		camera2:trackLight(light)
 		
 		light.x = lData.position[1]
 		light.y = lData.position[2]
@@ -129,13 +134,13 @@ local function addTestSprites()
 		coinGroup:insert(coinSprite)
 		
 		camera1:addBody(coinGroup, "dynamic", {friction = 0.5, bounce = 0.1, density = 1, radius = 17})
-		camera2:trackBody(coinGroup)
+--		camera2:trackBody(coinGroup)
 		
 		coinGroup.angularDamping = 0.5
 		coinGroup.linearDamping = 0.8
 		
 		local coinLight = camera1:newLight({color = {1, 0.843, 0, 0.25}})
-		camera2:trackLight(coinLight)
+--		camera2:trackLight(coinLight)
 		
 		coinLight.z = 0.05
 		coinLight.scale = 1 / 1.61803398874989
@@ -179,7 +184,7 @@ local function addTestSprites()
 	healthBox:insert(sprite)
 	
 	local healthLight = camera1:newLight({color = {1, 0, 0, 1}})
-	camera2:trackLight(healthLight)
+--	camera2:trackLight(healthLight)
 	
 	healthLight.x = 0
 	healthLight.y = 0
@@ -188,7 +193,7 @@ local function addTestSprites()
 	
 	mapGroup:insert(healthBox)
 	camera1:addBody(healthBox, "dynamic", {friction = 0.5, bounce = 0.1, density = 1, box = {halfWidth = 32, halfHeight = 32}})
-	camera2:trackBody(healthBox)
+--	camera2:trackBody(healthBox)
 	
 	healthBox.angularDamping = 0.2
 	healthBox.linearDamping = 0.6
@@ -196,35 +201,36 @@ end
 
 local function addPlayerCharacter()
 	-- Player Character
-	pCharacter = dynacam.newGroup()
-	pCharacter.x = 800
-	pCharacter.y = 800
-	mapGroup:insert(pCharacter)
+	smallShip = dynacam.newGroup()
+	smallShip.x = 800
+	smallShip.y = 800
+	smallShip.fMult = 1
+	mapGroup:insert(smallShip)
 	
 	local ship = dynacam.newImage("images/spaceship_carrier_01.png", "images/spaceship_carrier_01_n.png")
 	ship.fill.effect = "filter.pixelate"
 	ship.fill.effect.numPixels = 8
 	transition.to(ship.fill.effect, {time = 10000, numPixels = 1,}) -- Single transition
-	pCharacter:insert(ship)
-	pCharacter.ship = ship
+	smallShip:insert(ship)
+	smallShip.ship = ship
 	
 	local shipLight = camera1:newLight({color = {1, 1, 1, 1}})
-	camera2:trackLight(shipLight)
+--	camera2:trackLight(shipLight)
 	
 	shipLight.x = 300
 	shipLight.y = 0
 	shipLight.z = 0.15
 	shipLight.state = true
-	pCharacter:insert(shipLight)
-	pCharacter.shipLight = shipLight
+	smallShip:insert(shipLight)
+	smallShip.shipLight = shipLight
 	
-	camera1:addBody(pCharacter, "dynamic", {friction = 0.5, bounce = 0.1, density = 1, box = {halfWidth = 120, halfHeight = 64}})
-	camera2:trackBody(pCharacter)
+	camera1:addBody(smallShip, "dynamic", {friction = 0.5, bounce = 0.1, density = 1, box = {halfWidth = 120, halfHeight = 64}})
+--	camera2:trackBody(smallShip)
 	
-	pCharacter.angularDamping = 2
-	pCharacter.linearDamping = 0.5
+	smallShip.angularDamping = 2
+	smallShip.linearDamping = 0.5
 	
-	pCharacter:addEventListener("tap", function(event)
+	smallShip:addEventListener("tap", function(event)
 		local pCharacter = event.target
 		local light = pCharacter.shipLight
 		
@@ -345,11 +351,20 @@ local function addTestOther()
 	otherShip.x = 2750
 	otherShip.y = 1250
 	camera1:addBody(otherShip, "dynamic", {friction = 0.5, bounce = 0, density = 20, box = {halfWidth = otherShip.width * 0.5, halfHeight = otherShip.height * 0.4}})
-	camera2:trackBody(otherShip)
+--	camera2:trackBody(otherShip)
 	
+	otherShip.fMult = 100
 	otherShip.linearDamping = 0.5
-	otherShip:applyAngularImpulse(10000000)
+	otherShip:applyAngularImpulse(3000000)
 	mapGroup:insert(otherShip)
+	
+	otherShip:addEventListener("tap", function(event)
+		if (otherShip.angularVelocity < 5) and (otherShip.angularVelocity > -5) then
+			controlObject = otherShip
+			otherShip.linearDamping = 0.01
+			camera1:setFocus(otherShip)
+		end
+	end)
 end
 
 local function addMoreTestSprites()
@@ -380,6 +395,8 @@ local function createWorld()
 	addTestSprites()
 	addMoreTestSprites()
 	addPlayerCharacter()
+	
+	createEdges()
 end
 
 local function sliderListener(event)
@@ -440,31 +457,31 @@ local function createSlider(valueScale, offset, label, listener, defValue)
 end
 
 local function updateConstant(event)
-	pCharacter.shipLight.attenuationFactors[1] = event.value
+	smallShip.shipLight.attenuationFactors[1] = event.value
 end
 
 local function updateLinear(event)
-	pCharacter.shipLight.attenuationFactors[2] = event.value
+	smallShip.shipLight.attenuationFactors[2] = event.value
 end
 
 local function updateQuadratic(event)
-	pCharacter.shipLight.attenuationFactors[3] = event.value
+	smallShip.shipLight.attenuationFactors[3] = event.value
 end
 
 local function updateScale(event)
-	pCharacter.shipLight.scale = event.value
+	smallShip.shipLight.scale = event.value
 end
 
 local function updateColorR(event)
-	pCharacter.shipLight.color[1] = event.value
+	smallShip.shipLight.color[1] = event.value
 end
 
 local function updateColorG(event)
-	pCharacter.shipLight.color[2] = event.value
+	smallShip.shipLight.color[2] = event.value
 end
 
 local function updateColorB(event)
-	pCharacter.shipLight.color[3] = event.value
+	smallShip.shipLight.color[3] = event.value
 end
 
 local function updateZoom(event)
@@ -505,14 +522,16 @@ local function startGame()
 	dynacam.start()
 	
 	camera1:add(mapGroup)
-	camera1:setFocus(pCharacter)
+	camera1:setFocus(smallShip)
 	
-	camera2:add(mapGroup)
-	camera2:setFocus(healthBox, {trackRotation = true})
+--	camera2:add(mapGroup)
+--	camera2:setFocus(healthBox, {trackRotation = true})
 	
 --	camera:setZoom(0.5, 1500, 5000)
 	 
 	local counter = 0
+	
+	controlObject = smallShip
 	Runtime:addEventListener("enterFrame", function()
 		counter = (counter + 1) % (360 * 4)
 		local angle = math.rad(counter * 0.25)
@@ -523,14 +542,16 @@ local function startGame()
 		for key, holding in pairs(holdingKey) do
 			local force = holding and FORCES_KEY[key].force
 			if force then
-				local fX = math.cos(math.rad(pCharacter.rotation)) * force
-				local fY = math.sin(math.rad(pCharacter.rotation)) * force
+				force = force * (controlObject.fMult or 1)
 				
-				pCharacter:applyForce(fX, fY, pCharacter.x, pCharacter.y)
+				local fX = math.cos(math.rad(controlObject.rotation)) * force
+				local fY = math.sin(math.rad(controlObject.rotation)) * force
+				
+				controlObject:applyForce(fX, fY, controlObject.x, controlObject.y)
 			end
 			
 			if holding and FORCES_KEY[key].torque then
-				pCharacter:applyTorque(FORCES_KEY[key].torque)
+				controlObject:applyTorque(FORCES_KEY[key].torque * (controlObject.fMult or 1))
 			end
 		end
 	end)
@@ -540,19 +561,22 @@ local function cleanUp()
 	dynacam.stop()
 end
 
---	camera:setDrawMode("light")
 local function initialize()
 	display.setStatusBar( display.HiddenStatusBar )
 	
 	local hWidth = display.viewableContentWidth * 0.5
 	
-	camera1 = dynacam.newCamera({damping = 10, width = hWidth})
-	camera1.x = display.contentCenterX - display.viewableContentWidth * 0.25
+	camera1 = dynacam.newCamera({
+		damping = 10, 
+		--width = hWidth
+	})
+--	camera1:setDrawMode("normal")
+	camera1.x = display.contentCenterX --- display.viewableContentWidth * 0.25
 	camera1.y = display.contentCenterY
 	
-	camera2 = dynacam.newCamera({damping = 10, width = hWidth})
-	camera2.x = display.contentCenterX + display.viewableContentWidth * 0.25
-	camera2.y = display.contentCenterY
+--	camera2 = dynacam.newCamera({damping = 10, width = hWidth})
+--	camera2.x = display.contentCenterX + display.viewableContentWidth * 0.25
+--	camera2.y = display.contentCenterY
 	
 	physics.start()
 	physics.setGravity(0, 0)

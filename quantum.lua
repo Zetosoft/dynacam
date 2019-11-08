@@ -307,6 +307,10 @@ local entangleMetatable = {
 						
 						lightObject.parentRotation = self.viewRotation
 					end
+				else
+					if normalObject.fill and normalObject.fill.effect then
+						normalObject.fill.effect.rotate.rotation = math.rad(self.viewRotation + (self.fill.rotation or 0)) -- Fill might be rotated
+					end
 				end
 			end
 		end

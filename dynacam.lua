@@ -83,20 +83,27 @@ local touchMonitorMetatable = { -- Monitor transform changes
 	end
 }
 ---------------------------------------------- Local functions 
-local function cameraAdd(self, lightObject, isFocus)
-	if lightObject.normalObject then -- Only lightObjects have a normalObject property
+local function cameraAdd(self, object, isFocus, normal)
+	if object.normalObject then -- Only lightObjects have a normalObject property
 		if isFocus then
-			self.values.focus = lightObject
+			self.values.focus = object
 		end
 		
-		lightObject.camera = self
-		
-		self.diffuseView:insert(lightObject)
-		self.normalView:insert(lightObject.normalObject)
-		
-		self.objects[#self.objects + 1] = lightObject
-	else -- Regular object
-		self.defaultView:insert(lightObject)
+		if object.camera then -- Object belongs to another camera, track as borrowed for both cameras
+			if object.camera ~= self then
+				self.borrowed[#self.borrowed + 1] = object
+				object.camera.borrowed[#object.camera.borrowed + 1] = object
+			end
+		else
+			object.camera = self
+			
+			self.diffuseView:insert(object)
+			self.normalView:insert(object.normalObject)
+		end
+	elseif normal then -- Normal object
+		self.normalView:insert(object)
+	else -- Regular display object
+		self.defaultView:insert(object)
 	end
 end
 
@@ -313,9 +320,10 @@ local function enterFrame(event) -- Do not refactor! performance is better
 				end
 			end
 			
-			for oIndex = 1, #camera.objects do
-				camera.diffuseView:insert(camera.objects[oIndex])
-				camera.normalView:insert(camera.objects[oIndex].normalObject)
+			-- Add borrowed objects, if any
+			for oIndex = 1, #camera.borrowed do
+				camera.diffuseView:insert(camera.borrowed[oIndex])
+				camera.normalView:insert(camera.borrowed[oIndex].normalObject)
 			end
 			
 			-- Prepare buffers
@@ -679,14 +687,14 @@ function dynacam.newCamera(options)
 	camera.diffuseView = display.newGroup()
 	camera.normalView = display.newGroup()
 	camera.defaultView = display.newGroup() -- Default objects will be inserted on a top layer
-	camera.touchView = display.newGroup()
+	camera.touchView = display.newContainer(camera.values.vcw or vcw, camera.values.vch or vch)
 	
 	camera.touchView.isVisible = false
 	camera.touchView.isHitTestable = true
 	
 	camera.bodies = {}
 	camera.lights = {}
-	camera.objects = {}
+	camera.borrowed = {}
 	camera.listenerObjects = {} -- Touch & tap proxies
 	camera.lightDrawers = display.newGroup()
 	camera.ambientLightColor = ambientLightColor

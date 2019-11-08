@@ -568,9 +568,9 @@ local function initialize()
 	
 	camera1 = dynacam.newCamera({
 		damping = 10, 
-		--width = hWidth
+		width = hWidth
 	})
---	camera1:setDrawMode("normal")
+	camera1:setDrawMode("listeners")
 	camera1.x = display.contentCenterX --- display.viewableContentWidth * 0.25
 	camera1.y = display.contentCenterY
 	

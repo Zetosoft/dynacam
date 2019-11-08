@@ -38,15 +38,14 @@ local FILLS = {
 	},
 }
 local MAP = {
-	{1,1,1,1,1,1,1,2,1,1,2,2,2,2},
-	{1,1,1,2,1,1,1,1,1,1,1,1,1,2},
-	{1,1,2,2,2,2,1,2,1,1,1,2,2,2},
-	{1,2,2,2,2,2,1,2,2,2,2,2,2,2},
-	{1,2,2,2,2,1,1,1,1,1,1,1,1,1},
-	{1,2,2,2,2,1,1,1,1,1,1,1,1,1},
-	{1,2,2,1,1,1,1,1,1,1,1,1,1,1},
-	{2,1,1,1,1,1,1,1,1,2,2,1,1,1},
-	{2,2,2,2,1,1,1,1,1,1,2,1,1,1},
+	{1,1,1,1,1,1,1,2,1,1,2,2},
+	{1,1,1,2,1,1,1,1,1,1,1,1},
+	{1,1,2,2,2,2,1,2,1,1,1,2},
+	{1,2,2,2,2,2,1,2,2,2,2,2},
+	{1,2,2,2,2,1,1,1,1,1,1,1},
+	{1,2,2,2,2,1,1,1,1,1,1,1},
+	{1,2,2,1,1,1,1,1,1,1,1,1},
+	{2,1,1,1,1,1,1,1,1,2,2,1},
 }
 
 local ACCELERATION = 1000
@@ -71,7 +70,7 @@ end
 
 local function createBackground()
 	-- Tiles
-	local size = 250
+	local size = 500
 	for y = 1, #MAP do
 		for x = 1, #MAP[y] do
 			local rect = dynacam.newRect(x * size, y * size, size, size)
@@ -509,7 +508,7 @@ local function startGame()
 	camera1:setFocus(pCharacter)
 	
 	camera2:add(mapGroup)
-	camera2:setFocus(healthBox)
+	camera2:setFocus(healthBox, {trackRotation = true})
 	
 --	camera:setZoom(0.5, 1500, 5000)
 	 

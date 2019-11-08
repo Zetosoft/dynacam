@@ -2,24 +2,25 @@
 ### Overview
 ---
 
-The Dynamic lighting camera system adds dynamic lighting and full camera tracking to your game using normal maps and light objects
-
 Dynamic Lights + Camera
+
 Feel that your game needs to expand beyond the screen limits? Want to add dynamic lighting effects to your game? This is the plugin for you.
+This plugin adds dynamic lighting and full camera tracking to your game using normal maps and light objects.
 
 ### Notes
 
-- **dynacam.*** can only track *lightObject* type objects
 - The **quantum.*** engine is responsible for *lightObject* creation
 - All *lightObject* creator functions in **quantum.*** are available and reflected on **dynacam.*** as well (You can call *dynacam.newGroup()*, for example)
 - All *lightObject* inherit all properties and functions from the conventional *displayObject*, Additional functions and properties are listed below
 - All **quantum.*** constructor functions take in the same parameters as the **display.*** library, except for specified parameters listed below (Usually a normal map filename)
-- Physics bodies must be added to or created with a camera so lights can be calculated correctly for them
+- Physics bodies must be added to, or created with a camera, so lights can be calculated correctly for them
 - Lights can be created with **quantum.*** but will not be tracked until added to a camera as well
-- groups can be inserted into lightGroups, but not the other way around.
+- groups can be inserted into lightGroups, but will not work correctly the other way around.
 
 ### Gotchas
-- Because objects are drawn to a canvas, and the graphics engine "owns" these objects, Touch, tap and mouse listeners are forwarded using mirror groups that sit on front of the canvas. Complex, large groups will make the engine stutter if the hierarchy is too dynamic (Objects deleted, created, moved or scaled constantly).
+- Because objects are drawn to a canvas, and the graphics engine "owns" these objects, touch, tap, and mouse listeners are forwarded using a mirror object hierarchy that sit on front of the canvas. Complex, large objects will make the engine stutter if the hierarchy is too dynamic (Objects deleted, created, moved or scaled constantly).
+- All default functions have been replaced with a pointer table, for your own safety do not reference them/it as it loses its pointed function after referencing it again, even with a different index (translate, scale, rotate, etc.)
+- Performance wise, light objects count as 2 display objects, event forwarded objects count as 3, so these can stack up easily, test well for performance!
 
 ### Functions
 ---
@@ -101,7 +102,7 @@ Feel that your game needs to expand beyond the screen limits? Want to add dynami
 
 - *lightObject*
     - lightObject.*normal* (paint) : Supports any paint like *lightObject.fill*, but is intended for normal maps. A normal map rotation fix effect is placed by default, if removed, normal maps will stop illuminating correctly if rotated!
-	- lightObject.*super* (table) : Table to call default display object functions that only affect the diffuse part of the object. for example: `lightObject.super:insert(otherObject)`
+	- lightObject.*super* (table) : Table to call default display object functions that only affect the diffuse part of the object. for example: `lightObject.super:setFillColor(1)`
 - *cameraObject*
     - cameraObject.values.*targetRotation* (number) : Use this value to manually rotate the internal camera view.
 

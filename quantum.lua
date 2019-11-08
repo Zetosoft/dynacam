@@ -25,6 +25,9 @@ local quantum = {
 		end,
 	}
 }
+---------------------------------------------- Caches
+local tableRemove = table.remove
+local pcall = pcall
 ---------------------------------------------- Local functions 1
 local function protectedInsert(self, lightObject)
 	if self.super then
@@ -150,11 +153,15 @@ local fillProxyMetatable = { -- Used to intercept .fill transform changes and re
 	end,
 }
 
-local dualityFunction = setmetatable({
+local dualityTable -- Save self reference for paradox
+dualityTable = setmetatable({
 	object = nil,
 	index = nil,
 	warn = nil,
 	called = true,
+	proxyFunction = function(...) -- Used instead as it fixes `type()` behavior
+		return dualityTable(...) -- Paradox occurs here
+	end,
 }, {
 	__call = function(self, object, ...)
 		if object == self.object then
@@ -196,7 +203,7 @@ local inheritFunction = setmetatable({
 	end,
 })
 
-local inheritTable = setmetatable({
+local inheritTable = setmetatable({ -- Returned when `.super` is used, to forward default functions
 	object = nil,
 }, {
 	__index = function(self, index)
@@ -235,17 +242,17 @@ local entangleMetatable = {
 			end
 			
 			local message
-			if not dualityFunction.called then
-				if index ~= dualityFunction.index then -- Function was previously stored but not called, warn user on execution
-					dualityFunction.warn = dualityFunction.index
+			if not dualityTable.called then
+				if index ~= dualityTable.index then -- Function was previously stored but not called, warn user on execution
+					dualityTable.warn = dualityTable.index
 				end
 			end
 			
-			rawset(dualityFunction, "object", self)
-			rawset(dualityFunction, "index", index)
-			dualityFunction.called = false
+			rawset(dualityTable, "object", self)
+			rawset(dualityTable, "index", index)
+			dualityTable.called = false
 			
-			return dualityFunction, message
+			return dualityTable.proxyFunction, message
 		end
 		
 		return self._superMeta.__index(self, index)
@@ -316,8 +323,6 @@ local entangleMetatable = {
 		end
 	end,
 }
----------------------------------------------- Caches
-local tableRemove = table.remove
 ---------------------------------------------- Constants
 ---------------------------------------------- Local functions
 local function finalizeEntangledObject(event)

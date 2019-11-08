@@ -1,4 +1,5 @@
 require("mobdebug").start()
+require("mobdebug").coro()
 ----------------------------------------------- Demo game - Basilio Germán
 local physics = require("physics")
 local widget = require("widget")
@@ -321,12 +322,12 @@ local function addTestOther()
 	roundedRect.normal = {type = "image", filename = FILLS[2].normal}
 	shapesGroup:insert(roundedRect)
 	
-	roundedRect.normal = nil
+--	roundedRect.normal = nil
 	
-	transition.to(roundedRect, {delay = 5000, time = 2000, alpha = 0, xScale = 1.5, yScale = 0.5, onComplete = function(o)
-		display.remove(o)
+	transition.to(roundedRect, {delay = 5000, time = 2000, alpha = 0, xScale = 1.5, yScale = 0.5, onComplete = function(object)
+		display.remove(object)
 	end})
-	
+
 	shapesGroup:addEventListener("tap", function(event)
 		local shapesGroup = event.target
 		
@@ -336,7 +337,6 @@ local function addTestOther()
 		return true
 	end)
 
-	
 	-- Container
 	local container = dynacam.newContainer(200, 200)
 	container.x = 2750

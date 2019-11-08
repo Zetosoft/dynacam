@@ -70,6 +70,7 @@ local transition = transition
 
 local rawset = rawset
 local rawget = rawget
+local pcall = pcall
 ---------------------------------------------- Metatable
 local touchMonitorMetatable = { -- Monitor transform changes
 	__index = function(self, index)
@@ -231,8 +232,7 @@ local function buildMaskGroup(object, internalFlag, color)
 		local superMetaTouch = getmetatable(object)
 		rawset(object, "_superMetaTouch", superMetaTouch)
 		setmetatable(object, touchMonitorMetatable)
-		
-		object:addEventListener("finalize", finalizeMaskedObject) -- TODO: maybe add another finalize listener to maskObject?
+		object:addEventListener("finalize", finalizeMaskedObject)
 	end
 	
 	return maskObject
@@ -376,6 +376,7 @@ local function enterFrame(event) -- Do not refactor! performance is better
 					light.position[2] = (y) * vchr + 0.5
 					light.position[3] = light.z
 					
+					-- TODO: implement culling
 		--			if (light.position[1] >= CULL_LIMIT_MIN) and (light.position[1] <= CULL_LIMIT_MAX) and (light.position[2] >= CULL_LIMIT_MIN) and (light.position[1] <= CULL_LIMIT_MAX) then
 						local lightDrawer = camera.lightDrawers[lIndex]
 						lightDrawer.fill.effect.pointLightPos = light.position
@@ -401,7 +402,7 @@ local function enterFrame(event) -- Do not refactor! performance is better
 				end
 			end
 			
-			-- Handle touch objects
+			-- Handle listener objects
 			for lIndex = #camera.listenerObjects, 1, -1 do
 				local object = camera.listenerObjects[lIndex]
 				

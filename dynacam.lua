@@ -161,12 +161,19 @@ local function finalizeMaskedObject(event)
 	object.maskObject = nil
 end
 
-local function createMaskInsert(self, newObject)
+local function protectedMaskInsert(self, newObject)
 	self:regularInsert(newObject)
 	local maskObject = self.maskObject
 	
 	local newMaskObject = self.buildMaskGroup(newObject, true, self.touchArea.color)
 	maskObject:insert(newMaskObject)
+end
+
+local function createMaskInsert(self, newObject)
+	local status, value = pcall(protectedMaskInsert, self, newObject)
+	if not status then
+		error("Touch object insert failed", 2)
+	end
 end
 
 local function buildMaskGroup(object, internalFlag, color)

@@ -26,12 +26,29 @@ local quantum = {
 	}
 }
 ---------------------------------------------- Local functions 1
+local function protectedInsert(self, lightObject)
+	if self.super then
+		if lightObject.normalObject then
+			self.super:insert(lightObject)
+			self.normalObject:insert(lightObject.normalObject)
+			
+			lightObject.camera = self.camera
+			lightObject.parentRotation = self.viewRotation -- Let metatable update efefct
+		else -- Not light object!
+			self.super:insert(lightObject)
+			
+			return true 
+		end
+	end
+end
+
 local function lightInsert(self, lightObject)
-	self.super:insert(lightObject)
-	self.normalObject:insert(lightObject.normalObject)
+	local status, value = pcall(protectedInsert, self, lightObject)
+	if not status then
+		error("insert failed!", 2)
+	end
 	
-	lightObject.camera = self.camera
-	lightObject.parentRotation = self.viewRotation -- Let metatable update efefct
+	return value
 end
 
 local function monitorAddedEvents(self, eventName, eventFunction) -- Metatable called function

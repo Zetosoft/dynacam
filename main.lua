@@ -519,7 +519,7 @@ local function initialize()
 	display.setStatusBar( display.HiddenStatusBar )
 	
 	camera = dynacam.newCamera({damping = 10})
-	camera:setDrawMode("light")
+--	camera:setDrawMode("light")
 	camera.x = display.contentCenterX
 	camera.y = display.contentCenterY
 	
@@ -547,12 +547,17 @@ createSliders()
 startGame()
 
 local function crashGame()
+	
 	local wType = type(pCharacter.translate)
 	
-	local what = pCharacter.translate
-	local otherWhat = pCharacter.scale
+--	if pCharacter.translate == mapGroup.translate then
+--		print()
+--	end
 	
-	what(pCharacter, 5, 5)
+--	local what = pCharacter.translate
+--	local otherWhat = pCharacter.scale
+	
+--	what(pCharacter, 5, 5)
 	
 	
 end

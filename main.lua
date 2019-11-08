@@ -552,16 +552,10 @@ startGame()
 
 local function crashGame()
 	
-	pCharacter:insert(display.newCircle(0, 0, 25))
 	
-	local wut = pCharacter.translate
---	local yyy = pCharacter.scale
 	
-	print(pCharacter.rotate)
 	
-	wut(pCharacter, 5, 5)
-	
-	print(wut == yyy)
+
 end
 
 crashGame()

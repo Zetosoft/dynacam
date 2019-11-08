@@ -153,11 +153,17 @@ local fillProxyMetatable = { -- Used to intercept .fill transform changes and re
 local dualityFunction = setmetatable({
 	object = nil,
 	index = nil,
+	warn = nil,
 	called = true,
 }, {
 	__call = function(self, object, ...)
 		if object == self.object then
+			
 			self.called = true
+			if self.warn then
+				print("WARNING: Expected "..self.warn.." to be called before "..self.index.."")
+				self.warn = nil
+			end
 			
 			if object.normalObject then
 				object.normalObject[self.index](object.normalObject, ...)
@@ -228,9 +234,10 @@ local entangleMetatable = {
 				return self.entangleFunctions[index]
 			end
 			
+			local message
 			if not dualityFunction.called then
-				if index ~= dualityFunction.index then
-					error("ERROR: Expected "..dualityFunction.index.." to be called before "..index, 2)
+				if index ~= dualityFunction.index then -- Function was previously stored but not called, warn user on execution
+					dualityFunction.warn = dualityFunction.index
 				end
 			end
 			
@@ -238,7 +245,7 @@ local entangleMetatable = {
 			rawset(dualityFunction, "index", index)
 			dualityFunction.called = false
 			
-			return dualityFunction
+			return dualityFunction, message
 		end
 		
 		return self._superMeta.__index(self, index)

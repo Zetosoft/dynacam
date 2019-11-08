@@ -687,9 +687,12 @@ function dynacam.newCamera(options)
 	
 	camera.diffuseView = display.newGroup()
 	camera.normalView = display.newGroup()
-	camera.defaultView = display.newGroup() -- Default objects will be inserted on a top layer
-	camera.touchView = display.newContainer(camera.values.vcw or vcw, camera.values.vch or vch)
 	
+	camera.defaultView = display.newGroup() -- Default objects will be inserted on a top layer
+	camera.defaultContainer = display.newContainer(camera.values.vcw or vcw, camera.values.vch or vch)
+	camera.defaultContainer:insert(camera.defaultView)
+	
+	camera.touchView = display.newContainer(camera.values.vcw or vcw, camera.values.vch or vch)
 	camera.touchView.isVisible = false
 	camera.touchView.isHitTestable = true
 	
@@ -704,7 +707,7 @@ function dynacam.newCamera(options)
 	addCameraFramebuffers(camera)
 	
 	camera:insert(camera.canvas)
-	camera:insert(camera.defaultView)
+	camera:insert(camera.defaultContainer)
 	camera:insert(camera.touchView)
 	
 	camera.add = cameraAdd

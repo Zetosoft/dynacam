@@ -30,6 +30,7 @@ local focusRotationX, focusRotationY
 local rotationX, rotationY
 
 local initialized
+local isTracking
 local cameras
 ---------------------------------------------- Constants
 local CULL_LIMIT_MIN = -0.4
@@ -92,6 +93,8 @@ local function cameraAdd(self, lightObject, isFocus)
 		
 		self.diffuseView:insert(lightObject)
 		self.normalView:insert(lightObject.normalObject)
+		
+		self.objects[#self.objects + 1] = lightObject
 	else -- Regular object
 		self.defaultView:insert(lightObject)
 	end
@@ -250,162 +253,161 @@ local function buildTouchArea(camera, object)
 	object.touchArea = touchArea
 end
 
-local function cameraEnterFrame(self, event) 
-	-- Handle damping
-	if self.values.prevDamping ~= self.values.damping then -- Damping changed
-		self.values.prevDamping = self.values.damping
-		self.values.dampingRatio = 1 / self.values.damping
-	end
-	
-	-- Handle focus
-	if self.values.focus then
-		targetRotation = self.values.trackRotation and -self.values.focus.rotation or self.values.targetRotation
-		
-		-- Damp and apply rotation
-		self.diffuseView.rotation = (self.diffuseView.rotation - (self.diffuseView.rotation - targetRotation) * self.values.dampingRatio)
-		self.normalView.rotation = self.diffuseView.rotation
-		self.defaultView.rotation = self.diffuseView.rotation
-		
-		-- Damp x and y
-		self.values.currentX = (self.values.currentX - (self.values.currentX - (self.values.focus.x)) * self.values.dampingRatio)
-		self.values.currentY = (self.values.currentY - (self.values.currentY - (self.values.focus.y)) * self.values.dampingRatio)
-								
-		-- Boundary checker TODO: support scale
-		self.values.currentX = self.values.minX < self.values.currentX and self.values.currentX or self.values.minX
-		self.values.currentX = self.values.maxX > self.values.currentX and self.values.currentX or self.values.maxX
-		self.values.currentY = self.values.minY < self.values.currentY and self.values.currentY or self.values.minY
-		self.values.currentY = self.values.maxY > self.values.currentY and self.values.currentY or self.values.maxY
-		
-		-- Transform and calculate final position
-		radAngle = self.diffuseView.rotation * RADIANS_MAGIC -- Faster convert to radians
-		focusRotationX = mathSin(radAngle) * self.values.currentY
-		rotationX = mathCos(radAngle) * self.values.currentX
-		finalX = (-rotationX + focusRotationX) * self.values.zoom
-		
-		focusRotationY = mathCos(radAngle) * self.values.currentY
-		rotationY = mathSin(radAngle) * self.values.currentX
-		finalY = (-rotationY - focusRotationY) * self.values.zoom
-		
-		-- Apply x and y
-		self.diffuseView.x = finalX
-		self.diffuseView.y = finalY
+local function enterFrame(event) -- Do not refactor! performance is better
+	for cIndex = 1, #cameras do
+		if (event.frame % #cameras) == (cIndex - 1) then
+			local camera = cameras[cIndex]
+			
+			-- Handle damping
+			if camera.values.prevDamping ~= camera.values.damping then -- Damping changed
+				camera.values.prevDamping = camera.values.damping
+				camera.values.dampingRatio = 1 / camera.values.damping
+			end
+			
+			-- Handle focus
+			if camera.values.focus then
+				targetRotation = camera.values.trackRotation and -camera.values.focus.rotation or camera.values.targetRotation
+				
+				-- Damp and apply rotation
+				camera.diffuseView.rotation = (camera.diffuseView.rotation - (camera.diffuseView.rotation - targetRotation) * camera.values.dampingRatio)
+				camera.normalView.rotation = camera.diffuseView.rotation
+				camera.defaultView.rotation = camera.diffuseView.rotation
+				
+				-- Damp x and y
+				camera.values.currentX = (camera.values.currentX - (camera.values.currentX - (camera.values.focus.x)) * camera.values.dampingRatio)
+				camera.values.currentY = (camera.values.currentY - (camera.values.currentY - (camera.values.focus.y)) * camera.values.dampingRatio)
+										
+				-- Boundary checker TODO: support scale?
+				camera.values.currentX = camera.values.minX < camera.values.currentX and camera.values.currentX or camera.values.minX
+				camera.values.currentX = camera.values.maxX > camera.values.currentX and camera.values.currentX or camera.values.maxX
+				camera.values.currentY = camera.values.minY < camera.values.currentY and camera.values.currentY or camera.values.minY
+				camera.values.currentY = camera.values.maxY > camera.values.currentY and camera.values.currentY or camera.values.maxY
+				
+				-- Transform and calculate final position
+				radAngle = camera.diffuseView.rotation * RADIANS_MAGIC -- Faster convert to radians
+				focusRotationX = mathSin(radAngle) * camera.values.currentY
+				rotationX = mathCos(radAngle) * camera.values.currentX
+				finalX = (-rotationX + focusRotationX) * camera.values.zoom
+				
+				focusRotationY = mathCos(radAngle) * camera.values.currentY
+				rotationY = mathSin(radAngle) * camera.values.currentX
+				finalY = (-rotationY - focusRotationY) * camera.values.zoom
+				
+				-- Apply x and y
+				camera.diffuseView.x = finalX
+				camera.diffuseView.y = finalY
 
-		self.normalView.x = finalX
-		self.normalView.y = finalY
-		
-		self.defaultView.x = finalX
-		self.defaultView.y = finalY
-		
-		-- Update rotation normal on all children
-		if self.values.trackRotation then -- Only if global rotation has significantly changed
-			if (self.diffuseView.rotation - (self.diffuseView.rotation % 1)) ~= (targetRotation - (targetRotation % 1)) then
-				for cIndex = 1, self.diffuseView.numChildren do
-					self.diffuseView[cIndex].parentRotation = self.diffuseView.rotation
+				camera.normalView.x = finalX
+				camera.normalView.y = finalY
+				
+				camera.defaultView.x = finalX
+				camera.defaultView.y = finalY
+				
+				-- Update rotation normal on all children
+				if camera.values.trackRotation then -- Only if global rotation has significantly changed
+					if (camera.diffuseView.rotation - (camera.diffuseView.rotation % 1)) ~= (targetRotation - (targetRotation % 1)) then
+						for cIndex = 1, camera.diffuseView.numChildren do
+							camera.diffuseView[cIndex].parentRotation = camera.diffuseView.rotation
+						end
+					end
 				end
 			end
-		end
-	end
-	
-	-- Prepare buffers
-	self.lightBuffer:setBackground(0) -- Clear buffers
-	self.diffuseBuffer:setBackground(0)
-	self.normalBuffer:setBackground(0)
-	
-	self.diffuseBuffer:draw(self.diffuseView)
-	self.diffuseBuffer:invalidate({accumulate = self.values.accumulateBuffer})
-	
-	self.normalBuffer:draw(self.normalView)
-	self.normalBuffer:invalidate({accumulate = self.values.accumulateBuffer})
-	
-	-- Handle lights
-	if self.lightDrawers.numChildren ~= #self.lights then
-		local diff = #self.lights - self.lightDrawers.numChildren
-		
-		if diff > 0 then -- Create
-			for aIndex = 1, diff do 
-				local lightDrawer = display.newRect(0, 0, vcw, vch)
-				lightDrawer.fill = {type = "image", filename = self.normalBuffer.filename, baseDir = self.normalBuffer.baseDir}
-				lightDrawer.fill.blendMode = "add"
-				lightDrawer.fill.effect = "filter.custom.light"
-				self.lightDrawers:insert(lightDrawer)
+			
+			-- Prepare buffers
+			camera.lightBuffer:setBackground(0) -- Clear buffers
+			camera.diffuseBuffer:setBackground(0)
+			camera.normalBuffer:setBackground(0)
+			
+			for oIndex = 1, #camera.objects do
+				camera.diffuseView:insert(camera.objects[oIndex])
+				camera.normalView:insert(camera.objects[oIndex].normalObject)
 			end
-		elseif diff < 0 then -- Remove
-			local target = self.lightDrawers.numChildren + diff + 1
-			for rIndex = self.lightDrawers.numChildren, target, -1 do
-				display.remove(self.lightDrawers[rIndex])
+			
+			camera.diffuseBuffer:draw(camera.diffuseView)
+			camera.diffuseBuffer:invalidate({accumulate = camera.values.accumulateBuffer})
+			
+			camera.normalBuffer:draw(camera.normalView)
+			camera.normalBuffer:invalidate({accumulate = camera.values.accumulateBuffer})
+			
+			-- Handle light drawer pooling
+			if camera.lightDrawers.numChildren ~= #camera.lights then
+				local diff = #camera.lights - camera.lightDrawers.numChildren
+				
+				if diff > 0 then -- Create
+					for aIndex = 1, diff do 
+						local lightDrawer = display.newRect(0, 0, vcw, vch)
+						lightDrawer.fill = {type = "image", filename = camera.normalBuffer.filename, baseDir = camera.normalBuffer.baseDir}
+						lightDrawer.fill.blendMode = "add"
+						lightDrawer.fill.effect = "filter.custom.light"
+						camera.lightDrawers:insert(lightDrawer)
+					end
+				elseif diff < 0 then -- Remove
+					local target = camera.lightDrawers.numChildren + diff + 1
+					for rIndex = camera.lightDrawers.numChildren, target, -1 do
+						display.remove(camera.lightDrawers[rIndex])
+					end
+				end
 			end
-		end
-	end
-	
-	for lIndex = #self.lights, 1, -1 do
-		local light = self.lights[lIndex]
-		
-		if rawget(light, FLAG_REMOVE) then
-			tableRemove(self.lights, lIndex)
-		else
-			local x, y = light:localToContent(0, 0)
-		
-			light.position[1] = (x) * vcwr + 0.5
-			light.position[2] = (y) * vchr + 0.5
-			light.position[3] = light.z
 			
---			if (light.position[1] >= CULL_LIMIT_MIN) and (light.position[1] <= CULL_LIMIT_MAX) and (light.position[2] >= CULL_LIMIT_MIN) and (light.position[1] <= CULL_LIMIT_MAX) then
-				local lightDrawer = self.lightDrawers[lIndex]
-				lightDrawer.fill.effect.pointLightPos = light.position
-				lightDrawer.fill.effect.pointLightColor = light.color
-				lightDrawer.fill.effect.attenuationFactors = light.attenuationFactors or DEFAULT_ATTENUATION
-				lightDrawer.fill.effect.pointLightScale = 1 / (self.values.zoom * light.scale * SCALE_LIGHTS) -- TODO: implement light.inverseScale -- (1 / scale)
---			end
-		end
-	end
-	self.lightBuffer:draw(self.lightDrawers)
-	self.lightBuffer:invalidate({accumulate = false})
-	
-	-- Handle physics bodies
-	for bIndex = #self.bodies, 1, -1 do
-		local body = self.bodies[bIndex]
-		
-		if rawget(body, FLAG_REMOVE) then
-			tableRemove(self.bodies, bIndex)
-		else
-			body.normalObject.x = body.x
-			body.normalObject.y = body.y
-			body.rotation = body.rotation -- This will propagate changes to normal object
-		end
-	end
-	
-	-- Handle touch objects
-	for lIndex = #self.listenerObjects, 1, -1 do
-		local object = self.listenerObjects[lIndex]
-		
-		if rawget(object, FLAG_REMOVE) then
-			tableRemove(self.listenerObjects, lIndex)
+			-- Handle lights
+			for lIndex = #camera.lights, 1, -1 do
+				local light = camera.lights[lIndex]
+				
+				if rawget(light, FLAG_REMOVE) then
+					tableRemove(camera.lights, lIndex)
+				else
+					local x, y = light:localToContent(0, 0)
+				
+					light.position[1] = (x) * vcwr + 0.5
+					light.position[2] = (y) * vchr + 0.5
+					light.position[3] = light.z
+					
+		--			if (light.position[1] >= CULL_LIMIT_MIN) and (light.position[1] <= CULL_LIMIT_MAX) and (light.position[2] >= CULL_LIMIT_MIN) and (light.position[1] <= CULL_LIMIT_MAX) then
+						local lightDrawer = camera.lightDrawers[lIndex]
+						lightDrawer.fill.effect.pointLightPos = light.position
+						lightDrawer.fill.effect.pointLightColor = light.color
+						lightDrawer.fill.effect.attenuationFactors = light.attenuationFactors or DEFAULT_ATTENUATION
+						lightDrawer.fill.effect.pointLightScale = 1 / (camera.values.zoom * light.scale * SCALE_LIGHTS) -- TODO: implement light.inverseScale -- (1 / scale)
+		--			end
+				end
+			end
+			camera.lightBuffer:draw(camera.lightDrawers)
+			camera.lightBuffer:invalidate({accumulate = false})
 			
-			removeTouchArea(object)
-		else
-			local x, y = object:localToContent(0, 0)
+			-- Handle physics bodies
+			for bIndex = #camera.bodies, 1, -1 do
+				local body = camera.bodies[bIndex]
+				
+				if rawget(body, FLAG_REMOVE) then
+					tableRemove(camera.bodies, bIndex)
+				else
+					body.normalObject.x = body.x
+					body.normalObject.y = body.y
+					body.rotation = body.rotation -- This will propagate changes to normal object
+				end
+			end
 			
-			-- Override our values
-			object.touchArea.xScale = self.values.zoom
-			object.touchArea.yScale = self.values.zoom
-			object.touchArea.x = x 
-			object.touchArea.y = y 
-			object.touchArea.rotation = object.viewRotation
+			-- Handle touch objects
+			for lIndex = #camera.listenerObjects, 1, -1 do
+				local object = camera.listenerObjects[lIndex]
+				
+				if rawget(object, FLAG_REMOVE) then
+					tableRemove(camera.listenerObjects, lIndex)
+					
+					removeTouchArea(object)
+				else
+					local x, y = object:localToContent(0, 0)
+					
+					-- Override our values
+					object.touchArea.xScale = camera.values.zoom
+					object.touchArea.yScale = camera.values.zoom
+					object.touchArea.x = x 
+					object.touchArea.y = y 
+					object.touchArea.rotation = object.viewRotation
+				end
+			end
+	
 		end
-	end
-end
-
-local function cameraStart(self)
-	if not self.values.isTracking then
-		self.values.isTracking = true
-		Runtime:addEventListener("enterFrame", self)
-	end
-end
-
-local function cameraStop(self)
-	if self.values.isTracking then
-		Runtime:removeEventListener("enterFrame", self)
-		self.values.isTracking = false
 	end
 end
 
@@ -428,9 +430,7 @@ local function cameraToPoint(self, x, y, options)
 		y = y or ccy
 	}
 	
-	self:stop()
 	self:setFocus(tempFocus, options)
-	self:start()
 	
 	return tempFocus
 end
@@ -466,7 +466,7 @@ end
 
 local function finalizeCamera(event)
 	local camera = event.target
-	if camera.values.isTracking then
+	if isTracking then
 		Runtime:removeEventListener("enterFrame", camera)
 	end
 	
@@ -602,6 +602,20 @@ local function initialize()
 	end
 end
 ---------------------------------------------- Functions
+function dynacam.start()
+	if not isTracking then
+		isTracking = true
+		Runtime:addEventListener("enterFrame", enterFrame)
+	end
+end
+
+function dynacam.stop()
+	if isTracking then
+		isTracking = false
+		Runtime:removeEventListener("enterFrame", enterFrame)
+	end
+end
+
 function dynacam.refresh()
 	ccx = display.contentCenterX
 	ccy = display.contentCenterY
@@ -647,7 +661,6 @@ function dynacam.newCamera(options)
 		-- Flags
 		accumulateBuffer = false,
 		trackRotation = false,
-		isTracking = false,
 		debug = false,
 	}
 	
@@ -661,6 +674,7 @@ function dynacam.newCamera(options)
 	
 	camera.bodies = {}
 	camera.lights = {}
+	camera.objects = {}
 	camera.listenerObjects = {} -- Touch & tap proxies
 	camera.lightDrawers = display.newGroup()
 	camera.ambientLightColor = ambientLightColor
@@ -675,9 +689,6 @@ function dynacam.newCamera(options)
 	camera.add = cameraAdd
 	camera.setZoom = cameraSetZoom
 	camera.getZoom = cameraGetZoom
-	camera.enterFrame = cameraEnterFrame
-	camera.start = cameraStart
-	camera.stop = cameraStop
 	camera.setBounds = cameraSetBounds
 	
 	camera.setFocus = cameraSetFocus

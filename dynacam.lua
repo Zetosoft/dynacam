@@ -179,9 +179,6 @@ local function finalizeMaskedObject(event)
 	
 	display.remove(object.maskObject)
 	object.maskObject = nil
-	
-	setmetatable(object, object._superMetaTouch)
-	object._superMetaTouch = nil
 end
 
 local function protectedMaskInsert(self, newObject)

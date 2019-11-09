@@ -86,6 +86,11 @@ local touchMonitorMetatable = { -- Monitor transform changes
 	end
 }
 ---------------------------------------------- Local functions 
+local function finalizeAdded(event)
+	local borrowed = event.target
+	rawset(borrowed, FLAG_REMOVE, true)
+end
+
 local function cameraAdd(self, object, isFocus, normal)
 	if object.normalObject then -- Only lightObjects have a normalObject property
 		if isFocus then
@@ -108,6 +113,8 @@ local function cameraAdd(self, object, isFocus, normal)
 	else -- Regular display object
 		self.defaultView:insert(object)
 	end
+	
+	object:addEventListener("finalize", finalizeAdded)
 end
 
 local function cameraSetZoom(self, zoom, zoomDelay, zoomTime, onComplete)
@@ -282,8 +289,8 @@ local function enterFrame(event) -- Do not refactor! performance is better
 		camera.defaultView.rotation = camera.diffuseView.rotation
 		
 		-- Damp x and y
-		camera.values.currentX = (camera.values.currentX - (camera.values.currentX - (camera.values.focus.x)) * camera.values.dampingRatio)
-		camera.values.currentY = (camera.values.currentY - (camera.values.currentY - (camera.values.focus.y)) * camera.values.dampingRatio)
+		camera.values.currentX = (camera.values.currentX - (camera.values.currentX - (camera.values.focus.x or 0)) * camera.values.dampingRatio)
+		camera.values.currentY = (camera.values.currentY - (camera.values.currentY - (camera.values.focus.y or 0)) * camera.values.dampingRatio)
 								
 		-- Boundary checker TODO: support scale?
 		camera.values.currentX = camera.values.minX < camera.values.currentX and camera.values.currentX or camera.values.minX
@@ -494,13 +501,48 @@ end
 local function finalizeCamera(event)
 	local camera = event.target
 	
-	for cIndex = 1, #cameras do -- FInd self and remove from camera lists
+	for cIndex = 1, #cameras do -- Find self and remove from camera lists
 		if cameras[cIndex] == camera then
-			tableRemove(cameras, camera)
+			tableRemove(cameras, cIndex)
 			
 			break
 		end
 	end
+	
+	-- Garbage collector will be happy
+	camera.values = nil
+	camera.touchView = nil
+	camera.normalView = nil
+	camera.diffuseView = nil
+	camera.defaultView = nil
+	camera.defaultContainer = nil
+	camera.canvas = nil
+	
+	camera.borrowed = nil
+	camera.listenerObjects = nil
+	camera.lightDrawers = nil
+	
+	camera.ambientLightColor = nil
+	
+	camera.add = nil
+	camera.addListenerObject = nil
+	camera.getZoom = nil
+	camera.removeFocus = nil
+	camera.removeSelf = nil
+	camera.setBounds = nil
+	camera.setDrawMode = nil
+	camera.setFocus = nil
+	camera.setZoom = nil
+	camera.toPoint = nil
+	
+	-- Release buffers
+	camera.diffuseBuffer:releaseSelf()
+	camera.lightBuffer:releaseSelf()
+	camera.normalBuffer:releaseSelf()
+	
+	camera.diffuseBuffer = nil
+	camera.lightBuffer = nil
+	camera.normalBuffer = nil
 end
 
 local function finalizeCameraBody(event) -- Physics

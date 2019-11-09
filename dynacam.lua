@@ -33,8 +33,7 @@ local initialized
 local isTracking
 local cameras, lights, bodies
 ---------------------------------------------- Constants
-local CULL_LIMIT_MIN = -0.4
-local CULL_LIMIT_MAX = 1.4
+local CULL_LIMIT_PX = 800
 local RADIANS_MAGIC = math.pi / 180 -- Used to convert degrees to radians
 local DEFAULT_ATTENUATION = {0.4, 3, 20}
 local DEFAULT_AMBIENT_LIGHT = {0, 0, 0, 1}
@@ -365,10 +364,10 @@ local function enterFrame(event) -- Do not refactor! performance is better
 		end
 	end
 	
-	-- Handle lights
 	local vcwr = camera.values.vcwr or vcwr
 	local vchr = camera.values.vchr or vchr
 	
+	-- Handle lights
 	for lIndex = #lights, 1, -1 do
 		local light = lights[lIndex]
 		
@@ -381,14 +380,22 @@ local function enterFrame(event) -- Do not refactor! performance is better
 			light.position[2] = (y) * vchr + 0.5
 			light.position[3] = light.z
 			
-			-- TODO: implement culling?
---			if (light.position[1] >= CULL_LIMIT_MIN) and (light.position[1] <= CULL_LIMIT_MAX) and (light.position[2] >= CULL_LIMIT_MIN) and (light.position[1] <= CULL_LIMIT_MAX) then
-				local lightDrawer = camera.lightDrawers[lIndex]
+			local lightDrawer = camera.lightDrawers[lIndex]
+			
+			-- Light Culling
+			if (light.position[1] >= camera.values.cullMinX) -- X
+			and (light.position[1] <= camera.values.cullMaxX) 
+			and (light.position[2] >= camera.values.cullMinY) -- Y
+			and (light.position[2] <= camera.values.cullMaxY) then
+				lightDrawer.alpha = 1
+				
 				lightDrawer.fill.effect.pointLightPos = light.position
 				lightDrawer.fill.effect.pointLightColor = light.color
 				lightDrawer.fill.effect.attenuationFactors = light.attenuationFactors or DEFAULT_ATTENUATION
 				lightDrawer.fill.effect.pointLightScale = 1 / (camera.values.zoom * light.scale * SCALE_LIGHTS) -- TODO: implement light.inverseScale -- (1 / scale)
---			end
+			else
+				lightDrawer.alpha = 0
+			end
 		end
 	end
 	camera.lightBuffer:draw(camera.lightDrawers)
@@ -635,6 +642,16 @@ local function setDimensions(camera, options)
 	values.vch = oHeight
 	values.vcwr = oWidth and (1 / oWidth) or nil
 	values.vchr = oHeight and (1 / oHeight) or nil
+	
+	-- Cull values
+	local cullX = (options.cullLimit or CULL_LIMIT_PX) / oWidth
+	local cullY = (options.cullLimit or CULL_LIMIT_PX) / oHeight
+	
+	values.cullMinX = 0 - cullX
+	values.cullMaxX = 1 + cullX
+	
+	values.cullMinY = 0 - cullX
+	values.cullMaxY = 1 + cullX
 end
 ---------------------------------------------- Functions
 function dynacam.start()
@@ -696,6 +713,8 @@ function dynacam.newCamera(options)
 		vch = nil,
 		vcwr = nil,
 		vchr = nil,
+		cullMinX = nil,
+		cullMinY = nil,
 		
 		-- Camera Limits
 		minX = -mathHuge,

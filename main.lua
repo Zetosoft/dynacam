@@ -14,6 +14,7 @@ local mapGroup
 local healthBox
 local smallShip
 local otherShip
+
 local controlObject
 
 local holdingKey = {

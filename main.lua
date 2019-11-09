@@ -99,8 +99,7 @@ local function addlights()
 		local lOptions = {
 			color = lData.color,
 		}
-		local light = camera1:newLight(lOptions)
-		camera2:trackLight(light)
+		local light = dynacam.newLight(lOptions)
 		
 		light.x = lData.position[1]
 		light.y = lData.position[2]
@@ -135,14 +134,12 @@ local function addTestSprites()
 		coinSprite:play()
 		coinGroup:insert(coinSprite)
 		
-		camera1:addBody(coinGroup, "dynamic", {friction = 0.5, bounce = 0.1, density = 1, radius = 17})
-		camera2:trackBody(coinGroup)
+		dynacam.addBody(coinGroup, "dynamic", {friction = 0.5, bounce = 0.1, density = 1, radius = 17})
 		
 		coinGroup.angularDamping = 0.5
 		coinGroup.linearDamping = 0.8
 		
-		local coinLight = camera1:newLight({color = {1, 0.843, 0, 0.25}})
-		camera2:trackLight(coinLight)
+		local coinLight = dynacam.newLight({color = {1, 0.843, 0, 0.25}})
 		
 		coinLight.z = 0.05
 		coinLight.scale = 1 / 1.61803398874989
@@ -185,8 +182,7 @@ local function addTestSprites()
 	sprite:play()
 	healthBox:insert(sprite)
 	
-	local healthLight = camera1:newLight({color = {1, 0, 0, 1}})
-	camera2:trackLight(healthLight)
+	local healthLight = dynacam.newLight({color = {1, 0, 0, 1}})
 	
 	healthLight.x = 0
 	healthLight.y = 0
@@ -194,8 +190,7 @@ local function addTestSprites()
 	healthBox:insert(healthLight)
 	
 	mapGroup:insert(healthBox)
-	camera1:addBody(healthBox, "dynamic", {friction = 0.5, bounce = 0.1, density = 1, box = {halfWidth = 32, halfHeight = 32}})
-	camera2:trackBody(healthBox)
+	dynacam.addBody(healthBox, "dynamic", {friction = 0.5, bounce = 0.1, density = 1, box = {halfWidth = 32, halfHeight = 32}})
 	
 	healthBox.angularDamping = 0.2
 	healthBox.linearDamping = 0.6
@@ -216,8 +211,7 @@ local function addPlayerCharacter()
 	smallShip:insert(ship)
 	smallShip.ship = ship
 	
-	local shipLight = camera1:newLight({color = {1, 1, 1, 1}})
-	camera2:trackLight(shipLight)
+	local shipLight = dynacam.newLight({color = {1, 1, 1, 1}})
 	
 	shipLight.x = 300
 	shipLight.y = 0
@@ -226,8 +220,7 @@ local function addPlayerCharacter()
 	smallShip:insert(shipLight)
 	smallShip.shipLight = shipLight
 	
-	camera1:addBody(smallShip, "dynamic", {friction = 0.5, bounce = 0.1, density = 1, box = {halfWidth = 120, halfHeight = 64}})
-	camera2:trackBody(smallShip)
+	dynacam.addBody(smallShip, "dynamic", {friction = 0.5, bounce = 0.1, density = 1, box = {halfWidth = 120, halfHeight = 64}})
 	
 	smallShip.angularDamping = 2
 	smallShip.linearDamping = 0.5
@@ -351,8 +344,7 @@ local function addTestOther()
 	otherShip = dynacam.newImage("images/spaceship_carrier_02.png", "images/spaceship_carrier_02_n.png")
 	otherShip.x = 2750
 	otherShip.y = 1250
-	camera1:addBody(otherShip, "dynamic", {friction = 0.5, bounce = 0, density = 20, box = {halfWidth = otherShip.width * 0.5, halfHeight = otherShip.height * 0.4}})
-	camera2:trackBody(otherShip)
+	dynacam.addBody(otherShip, "dynamic", {friction = 0.5, bounce = 0, density = 20, box = {halfWidth = otherShip.width * 0.5, halfHeight = otherShip.height * 0.4}})
 	
 	otherShip.fMult = 100
 	otherShip.linearDamping = 0.5

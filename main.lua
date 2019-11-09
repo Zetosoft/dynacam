@@ -524,11 +524,11 @@ local function startGame()
 	
 	controlObject = smallShip
 	Runtime:addEventListener("enterFrame", function()
-		counter = (counter + 1) % (360 * 4)
-		local angle = math.rad(counter * 0.25)
-		camera1.lights[4].x = 700 + math.cos(angle) * 600
-		camera1.lights[4].y = 700 + math.sin(angle) * 600
-		camera1.lights[4].color[1] = math.cos(angle * 4)
+--		counter = (counter + 1) % (360 * 4)
+--		local angle = math.rad(counter * 0.25)
+--		camera1.lights[4].x = 700 + math.cos(angle) * 600
+--		camera1.lights[4].y = 700 + math.sin(angle) * 600
+--		camera1.lights[4].color[1] = math.cos(angle * 4)
 		
 		for key, holding in pairs(holdingKey) do
 			local force = holding and FORCES_KEY[key].force

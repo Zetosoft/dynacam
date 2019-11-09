@@ -346,15 +346,16 @@ local function finalizeEntangledObject(event)
 	
 	display.remove(lightObject.normalObject)
 	
+	-- First remove metatable
+	setmetatable(lightObject, lightObject._superMeta)
+	lightObject._superMeta = nil
+	
 	lightObject.normalObject = nil
 	lightObject.fillProxy = nil
 	lightObject.entangleFunctions = nil
 	lightObject.viewRotation = nil
 	
 	lightObject._camera = nil
-	
-	setmetatable(lightObject, lightObject._superMeta)
-	lightObject._superMeta = nil
 end
 
 local function entangleObject(lightObject, entangleFunctions) -- Basic light object principle, where we make object pairs in different worlds (diffuse & normal)

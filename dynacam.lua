@@ -625,12 +625,13 @@ local function buildPolygonCanvas(camera)
 end
 
 local function addCameraFramebuffers(camera)
-	if camera.canvas then
-		-- Prevent deletion
+	if camera.canvas then -- Camera already has a canvas
+		-- Prevent content deletion
 		camera:insert(camera.diffuseView)
 		camera:insert(camera.normalView)
 		camera:insert(camera.lightDrawers)
 		
+		-- Release old textures
 		camera.diffuseBuffer:releaseSelf()
 		camera.normalBuffer:releaseSelf()
 		camera.lightBuffer:releaseSelf()
@@ -645,10 +646,12 @@ local function addCameraFramebuffers(camera)
 	camera.defaultContainer.width = vcw
 	camera.defaultContainer.height = vch
 	
+	-- Recreate frame buffers
 	camera.diffuseBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch})
 	camera.normalBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch})
 	camera.lightBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch})
 	
+	-- Create or refresh canvas
 	if not camera.canvas then -- Canvas - this is what is actually shown
 		if camera.values.vertices then
 			buildPolygonCanvas(camera)
@@ -660,6 +663,15 @@ local function addCameraFramebuffers(camera)
 		camera.canvas.height = vch
 	end
 	
+	-- Refresh existing light drawers
+	for lIndex = 1, camera.lightDrawers.numChildren do
+		local lightDrawer = camera.lightDrawers[lIndex]
+		lightDrawer.fill = {type = "image", filename = camera.normalBuffer.filename, baseDir = camera.normalBuffer.baseDir}
+		lightDrawer.fill.blendMode = "add"
+		lightDrawer.fill.effect = "filter.custom.light"
+	end
+	
+	-- Refresh default fill
 	camera.canvas.defaultFill = { -- Save default fill
 		type = "composite",
 		paint1 = {type = "image", filename = camera.diffuseBuffer.filename, baseDir = camera.diffuseBuffer.baseDir},

@@ -626,8 +626,10 @@ end
 
 local function addCameraFramebuffers(camera)
 	if camera.canvas then
+		-- Prevent deletion
 		camera:insert(camera.diffuseView)
 		camera:insert(camera.normalView)
+		camera:insert(camera.lightDrawers)
 		
 		camera.diffuseBuffer:releaseSelf()
 		camera.normalBuffer:releaseSelf()

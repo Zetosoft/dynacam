@@ -693,8 +693,8 @@ local function setDimensions(camera, options)
 	values.vchr = oHeight and (1 / oHeight) or nil
 	
 	-- Cull values
-	local cullX = (options.cullLimit or CULL_LIMIT_PX) / oWidth
-	local cullY = (options.cullLimit or CULL_LIMIT_PX) / oHeight
+	local cullX = (options.cullLimit or CULL_LIMIT_PX) / (oWidth or vcw)
+	local cullY = (options.cullLimit or CULL_LIMIT_PX) / (oHeight or vch)
 	
 	values.cullMinX = 0 - cullX
 	values.cullMaxX = 1 + cullX

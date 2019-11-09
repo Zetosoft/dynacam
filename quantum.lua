@@ -28,6 +28,8 @@ local quantum = {
 ---------------------------------------------- Caches
 local tableRemove = table.remove
 local pcall = pcall
+---------------------------------------------- Variables
+local tripped
 ---------------------------------------------- Local functions 1
 local function protectedInsert(self, lightObject)
 	if self.super then
@@ -66,6 +68,8 @@ local function monitorAddedEvents(self, eventName, eventFunction) -- Metatable c
 	return self.super:addEventListener(eventName, eventFunction)
 end
 ---------------------------------------------- Constants
+local Q_KEY = string.format("%x", tonumber(string.match(tostring(quantum), "(0x.*)")) + 16)
+
 local DEFAULT_NORMAL = {0.5, 0.5, 1.0}
 local DEFAULT_Z = 0.2
 local DEFAULT_ATTENUATION = {0.4, 3, 20}
@@ -371,8 +375,12 @@ local function entangleObject(lightObject, entangleFunctions) -- Basic light obj
 	lightObject:addEventListener("finalize", finalizeEntangledObject)
 end
 ---------------------------------------------- Module functions
-function quantum.newLight(options, debugLight) -- Only meant to be used internally by dynacam, or will fail to be updated
+function quantum.newLight(options, debugLight, key) -- Only meant to be used internally by dynacam
 	options = options or {}
+	
+	if key ~= Q_KEY then -- Prevent devs from calling this function, as names are the same
+		error("Invalid key, light creation has been disabled", 2)
+	end
 	
 	local z = options.z or DEFAULT_Z
 	local color = options.color or DEFAULT_LIGHT_COLOR -- New instance of white

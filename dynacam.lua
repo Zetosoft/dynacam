@@ -8,6 +8,7 @@ require(requirePath.."shaders.rotate")
 require(requirePath.."shaders.apply")
 require(requirePath.."shaders.light")
 
+
 local quantum = require(requirePath.."quantum")
 local CoronaLibrary = require("CoronaLibrary")
 local physics = require("physics")
@@ -33,6 +34,8 @@ local initialized
 local isTracking
 local cameras, lights, bodies
 ---------------------------------------------- Constants
+local Q_KEY = string.format("%x", tonumber(string.match(tostring(quantum), "(0x.*)")) + 16)
+
 local CULL_LIMIT_PX = 800
 local RADIANS_MAGIC = math.pi / 180 -- Used to convert degrees to radians
 local DEFAULT_ATTENUATION = {0.4, 3, 20}
@@ -682,8 +685,8 @@ function dynacam.refresh()
 	end
 end
 
-function dynacam.newLight(options)
-	local light = quantum.newLight(options)
+function dynacam.newLight(options, debugLight)
+	local light = quantum.newLight(options, debugLight, Q_KEY)
 	trackLight(light)
 	
 	return light

@@ -32,7 +32,7 @@ This plugin adds dynamic lighting and full camera tracking to your game using no
 		- **options.ambientLightColor** (table) 4 Indexed table specifying RGB and intensity respective float values. Default is black *{0, 0, 0, 1}*
 		- **options.width** (number) If specified, camera will be of specific width, or width ratio if less than 1. Full screen resize width is the default.
 		- **options.height** (number) If specified, camera will be of specific height, or height ratio if less than 1. Full screen resize height is the default.
-		- **options.vertices** (table) Table containing normalized (0 - 1) vertices for canvas shape. If specified, *.width* and *.height* options will be ignored.
+		- **options.vertices** (table) Table containing normalized (0 - 1 range) vertices for canvas shape. If specified, *.width* and *.height* options will be ignored.
 		- **options.cullLimit** (number) Cull limit in pixel value. Lights outside the edge plus this number will not be rendered. default is 800.
 	- dynacam.*refresh()*
 		- Refresh internal display values in case of a viewport dimensions change, updates fullscreen dimensions on all cameras

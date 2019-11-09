@@ -639,6 +639,12 @@ local function addCameraFramebuffers(camera)
 	local vcw = camera.values.vcw or vcw
 	local vch = camera.values.vch or vch
 	
+	-- Update container dimensions
+	camera.touchView.width = vcw
+	camera.touchView.height = vch
+	camera.defaultContainer.width = vcw
+	camera.defaultContainer.height = vch
+	
 	camera.diffuseBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch})
 	camera.normalBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch})
 	camera.lightBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch})

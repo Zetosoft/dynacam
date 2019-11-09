@@ -275,41 +275,42 @@ end
 local function enterFrame(event) -- Do not refactor! performance is better
 	local cameraIndex = (event.frame % #cameras) + 1
 	local camera = cameras[cameraIndex]
+	local values = camera.values
 	
 	-- Handle damping
-	if camera.values.prevDamping ~= camera.values.damping then -- Damping changed
-		camera.values.prevDamping = camera.values.damping
-		camera.values.dampingRatio = 1 / camera.values.damping
+	if values.prevDamping ~= values.damping then -- Damping changed
+		values.prevDamping = values.damping
+		values.dampingRatio = 1 / values.damping
 	end
 	
 	-- Handle focus
-	if camera.values.focus then
-		targetRotation = camera.values.trackRotation and -camera.values.focus.rotation or camera.values.targetRotation
+	if values.focus then
+		targetRotation = values.trackRotation and -values.focus.rotation or values.targetRotation
 		
 		-- Damp and apply rotation
-		camera.diffuseView.rotation = (camera.diffuseView.rotation - (camera.diffuseView.rotation - targetRotation) * camera.values.dampingRatio)
+		camera.diffuseView.rotation = (camera.diffuseView.rotation - (camera.diffuseView.rotation - targetRotation) * values.dampingRatio)
 		camera.normalView.rotation = camera.diffuseView.rotation
 		camera.defaultView.rotation = camera.diffuseView.rotation
 		
 		-- Damp x and y
-		camera.values.currentX = (camera.values.currentX - (camera.values.currentX - (camera.values.focus.x or 0)) * camera.values.dampingRatio)
-		camera.values.currentY = (camera.values.currentY - (camera.values.currentY - (camera.values.focus.y or 0)) * camera.values.dampingRatio)
+		values.currentX = (values.currentX - (values.currentX - (values.focus.x or 0)) * values.dampingRatio)
+		values.currentY = (values.currentY - (values.currentY - (values.focus.y or 0)) * values.dampingRatio)
 								
-		-- Boundary checker TODO: support scale?
-		camera.values.currentX = camera.values.minX < camera.values.currentX and camera.values.currentX or camera.values.minX
-		camera.values.currentX = camera.values.maxX > camera.values.currentX and camera.values.currentX or camera.values.maxX
-		camera.values.currentY = camera.values.minY < camera.values.currentY and camera.values.currentY or camera.values.minY
-		camera.values.currentY = camera.values.maxY > camera.values.currentY and camera.values.currentY or camera.values.maxY
+		-- Boundary checker TODO: support edges?
+		values.currentX = values.minX < values.currentX and values.currentX or values.minX
+		values.currentX = values.maxX > values.currentX and values.currentX or values.maxX
+		values.currentY = values.minY < values.currentY and values.currentY or values.minY
+		values.currentY = values.maxY > values.currentY and values.currentY or values.maxY
 		
 		-- Transform and calculate final position
 		radAngle = camera.diffuseView.rotation * RADIANS_MAGIC -- Faster convert to radians
-		focusRotationX = mathSin(radAngle) * camera.values.currentY
-		rotationX = mathCos(radAngle) * camera.values.currentX
-		finalX = (-rotationX + focusRotationX) * camera.values.zoom
+		focusRotationX = mathSin(radAngle) * values.currentY
+		rotationX = mathCos(radAngle) * values.currentX
+		finalX = (-rotationX + focusRotationX) * values.zoom
 		
-		focusRotationY = mathCos(radAngle) * camera.values.currentY
-		rotationY = mathSin(radAngle) * camera.values.currentX
-		finalY = (-rotationY - focusRotationY) * camera.values.zoom
+		focusRotationY = mathCos(radAngle) * values.currentY
+		rotationY = mathSin(radAngle) * values.currentX
+		finalY = (-rotationY - focusRotationY) * values.zoom
 		
 		-- Apply x and y
 		camera.diffuseView.x = finalX
@@ -322,7 +323,7 @@ local function enterFrame(event) -- Do not refactor! performance is better
 		camera.defaultView.y = finalY
 		
 		-- Update rotation normal on all children
-		if camera.values.trackRotation then -- Only if global rotation has significantly changed
+		if values.trackRotation then -- Only if global rotation has significantly changed
 			if (camera.diffuseView.rotation - (camera.diffuseView.rotation % 1)) ~= (targetRotation - (targetRotation % 1)) then
 				for cIndex = 1, camera.diffuseView.numChildren do
 					camera.diffuseView[cIndex].parentRotation = camera.diffuseView.rotation
@@ -349,18 +350,18 @@ local function enterFrame(event) -- Do not refactor! performance is better
 	camera.normalBuffer:setBackground(0)
 	
 	camera.diffuseBuffer:draw(camera.diffuseView)
-	camera.diffuseBuffer:invalidate({accumulate = camera.values.accumulateBuffer})
+	camera.diffuseBuffer:invalidate({accumulate = values.accumulateBuffer})
 	
 	camera.normalBuffer:draw(camera.normalView)
-	camera.normalBuffer:invalidate({accumulate = camera.values.accumulateBuffer})
+	camera.normalBuffer:invalidate({accumulate = values.accumulateBuffer})
 	
 	-- Handle light drawer pooling
 	if camera.lightDrawers.numChildren ~= #lights then
 		local diff = #lights - camera.lightDrawers.numChildren
 		
 		if diff > 0 then -- Create
-			local vcw = camera.values.vcw or vcw
-			local vch = camera.values.vch or vch
+			local vcw = values.vcw or vcw
+			local vch = values.vch or vch
 			
 			for aIndex = 1, diff do 
 				local lightDrawer = display.newRect(0, 0, vcw, vch)
@@ -377,8 +378,8 @@ local function enterFrame(event) -- Do not refactor! performance is better
 		end
 	end
 	
-	local vcwr = camera.values.vcwr or vcwr
-	local vchr = camera.values.vchr or vchr
+	local vcwr = values.vcwr or vcwr
+	local vchr = values.vchr or vchr
 	
 	-- Handle lights
 	for lIndex = #lights, 1, -1 do
@@ -396,16 +397,16 @@ local function enterFrame(event) -- Do not refactor! performance is better
 			local lightDrawer = camera.lightDrawers[lIndex]
 			
 			-- Light Culling
-			if (light.position[1] >= camera.values.cullMinX) -- X
-			and (light.position[1] <= camera.values.cullMaxX) 
-			and (light.position[2] >= camera.values.cullMinY) -- Y
-			and (light.position[2] <= camera.values.cullMaxY) then
+			if (light.position[1] >= values.cullMinX) -- X
+			and (light.position[1] <= values.cullMaxX) 
+			and (light.position[2] >= values.cullMinY) -- Y
+			and (light.position[2] <= values.cullMaxY) then
 				lightDrawer.alpha = 1
 				
 				lightDrawer.fill.effect.pointLightPos = light.position
 				lightDrawer.fill.effect.pointLightColor = light.color
 				lightDrawer.fill.effect.attenuationFactors = light.attenuationFactors or DEFAULT_ATTENUATION
-				lightDrawer.fill.effect.pointLightScale = 1 / (camera.values.zoom * light.scale * SCALE_LIGHTS) -- TODO: implement light.inverseScale -- (1 / scale)
+				lightDrawer.fill.effect.pointLightScale = 1 / (values.zoom * light.scale * SCALE_LIGHTS) -- TODO: implement light.inverseScale -- (1 / scale)
 			else
 				lightDrawer.alpha = 0
 			end
@@ -439,8 +440,8 @@ local function enterFrame(event) -- Do not refactor! performance is better
 			local x, y = object:localToContent(0, 0)
 			
 			-- Override our values
-			object.touchArea.xScale = camera.values.zoom
-			object.touchArea.yScale = camera.values.zoom
+			object.touchArea.xScale = values.zoom
+			object.touchArea.yScale = values.zoom
 			object.touchArea.x = x 
 			object.touchArea.y = y 
 			object.touchArea.rotation = object.viewRotation

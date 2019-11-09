@@ -363,7 +363,7 @@ local function entangleObject(lightObject, entangleFunctions) -- Basic light obj
 	lightObject.viewRotation = 0
 	
 	-- Fill & Effect are replaced by proxies that forward  set values to diffuse and normal objects at the same time.
-	local effectProxy = {
+	local effectProxy = { -- All individual objects have unique fill and effect proxies
 		normalObject = lightObject.normalObject, -- Needed to update effect
 		effect = nil, -- Set during meta query (fill)
 	}

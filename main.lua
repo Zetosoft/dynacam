@@ -317,8 +317,6 @@ local function addTestOther()
 	roundedRect.normal = {type = "image", filename = FILLS[2].normal}
 	shapesGroup:insert(roundedRect)
 	
---	roundedRect.normal = nil
-	
 	transition.to(roundedRect, {delay = 5000, time = 2000, alpha = 0, xScale = 1.5, yScale = 0.5, onComplete = function(object)
 		display.remove(object)
 	end})
@@ -601,7 +599,9 @@ createSliders()
 startGame()
 
 local function testStuff()
-
+--	timer.performWithDelay(11000, function()
+--		display.remove(camera1)
+--	end)
 end
 
 testStuff()

@@ -13,20 +13,21 @@ This plugin adds dynamic lighting and full camera tracking to your game using no
 - All *lightObject* creator functions in **quantum.*** are available and reflected on **dynacam.*** as well (You can call *dynacam.newGroup()*, for example)
 - All *lightObject* inherit all properties and functions from the conventional *displayObject*, Additional functions and properties are listed below
 - All **quantum.*** constructor functions take in the same parameters as the **display.*** library, except for specified parameters listed below (Usually a normal map filename)
-- Physics bodies must be added to, or created with a camera, so lights can be calculated correctly for them
-- Lights can be created with **quantum.*** but will not be tracked until added to a camera as well
+- Physics bodies must be added with **dynacam.addBody()**, so lights can be calculated correctly for them
 - groups can be inserted into lightGroups, but will not work correctly the other way around.
 
 ### Gotchas
 - Because objects are drawn to a canvas, and the graphics engine "owns" these objects, touch, tap, and mouse listeners are forwarded using a mirror object hierarchy that sit on front of the canvas. Complex, large objects will make the engine stutter if the hierarchy is too dynamic (Objects deleted, created, moved or scaled constantly).
-- All default functions have been replaced with a pointer table, for your own safety do not reference them/it as it loses its pointed function after referencing it again, even with a different index (translate, scale, rotate, etc.)
+- All default functions have been replaced with a pointer function, for your own safety do not reference it as it loses its pointed function after referencing it again, even with a different index (translate, scale, rotate, etc.) The engine will warn about unusual behavior.
+- Fill and effect userdata have been also replaced by a pointer table, same precautions apply.
 - Performance wise, light objects count as 2 display objects, event forwarded objects count as 3, so these can stack up easily, test well for performance!
+- Multiple cameras will share the global FPS, so 2 cameras will both work at 30 FPS if Corona is set to 60 FPS, 3 cameras will work at 20 FPS each, and so on. 
 
 ### Functions
 ---
 
 - dynacam.*
-	- dynacam.*newCamera(**options**)* : Returns new *cameraObject*, all properties are optional
+	- dynacam.*newCamera(**options**)* : Returns new *cameraObject*, all keys are optional
 		- **options.damping** (number) Number specifying damping. Higher value means slower camera tracking. Default is 10
 		- **options.ambientLightColor** (table) 4 Indexed table specifying RGB and intensity respective float values. Default is black *{0, 0, 0, 1}*
 		- **options.width** (number) If specified, camera will be of specific width, or width ratio if less than 1. Full screen resize width is the default.
@@ -34,26 +35,26 @@ This plugin adds dynamic lighting and full camera tracking to your game using no
 		- **options.vertices** (table) Table containing normalized (0 - 1) vertices for canvas shape. If specified, *.width* and *.height* options will be ignored.
 		- **options.cullLimit** (number) Cull limit in pixel value. Lights outside the edge plus this number will not be rendered. default is 800.
 	- dynacam.*refresh()*
-		- Refresh internal display values in case of a viewport dimensions change
+		- Refresh internal display values in case of a viewport dimensions change, updates fullscreen dimensions on all cameras
 	- dynacam.*newLight(**options**)* : Creates and tracks new light
         - **options.color** (table) Table containing normalized RGB and intensity values
 		- **options.attenuationFactors** (table) Table containing *constant*, *linear* and *quadratic* light attenuation factors
 		- **options.z** (number) Light height (0 - 1 range)
 	- dynacam.*addBody(**object**, **...**)*
         - Create and track physics body. Uses same parameters as *physics.addBody()*. Used to update physics body normal rotation correctly. Lights will not work on a physics body correctly unless tracked by dynacam.
+	- dynacam.*start()*
+        - Starts updating all cameras
+    - dynacam.*stop()*
+        - Stops updating all cameras
 - *cameraObject*
-    - cameraObject:*add(**lightObject**, **isFocus**)*
-        - Add specified *lightObject* to camera hierarchy. Think of it like an *:insert()* replacement.
-    - cameraObject:*start()*
-        - Starts updating the camera
-    - cameraObject:*stop()*
-        - Stops updating the camera
+    - cameraObject:*add(**object**, **isFocus**, **normal**)*
+        - Add specified *object* to camera hierarchy. Think of it like an *:insert()* replacement. **isFocus** (boolean) will make the camera track this object. **normal** (boolean) can be specified to insert object to normal view. Works with default and light objects
     - cameraObject:*getZoom()*
         - Returns zoom value. Default is 1
     - cameraObject:*setZoom(**zoom**, **zoomDelay**, **zoomTime**, **onComplete**)*
         - Sets camera **zoom** (number), as a scale number
-        - **zoomDelay** (number) delay in milliseconds before zoom begins or sets
-        - **zoomTime** (number) time in milliseconds for zoom to get to specified value
+        - **zoomDelay** (number) delay in milliseconds before zoom begins or sets, set to 0 for instant
+        - **zoomTime** (number) time in milliseconds for zoom to get to specified value, set to 0 for instant
         - **onComplete** Optional function called when zoom animation completes.
     - cameraObject:*setBounds(**minX**, **maxX**, **minY**, **maxY**)*
         - Sets camera boundaries
@@ -76,10 +77,6 @@ This plugin adds dynamic lighting and full camera tracking to your game using no
         - Internal function used to forward touch, tap and mouse events to objects owned by the camera canvas. This is done automatically and internally by all *lightObject*
 - quantum.*
 	- quantum.*newGroup()*
-	- quantum.*newLight(**options**)* : returns new untracked light. Must add light to camera using cameraObject.*addLight(**light**)*, or use cameraObject.*newLight(**options**)* to create a light instead.
-		- **options.color** (table) Table containing normalized RGB and intensity values
-		- **options.attenuationFactors** (table) Table containing *constant*, *linear* and *quadratic* light attenuation factors
-		- **options.z** (number) Light height (0 - 1 range)
 	- quantum.*newLine(**...**)*
 	- quantum.*newCircle(**x**, **y**, **radius**)*
 	- quantum.*newRect(**x**, **y**, **width**, **height**)*

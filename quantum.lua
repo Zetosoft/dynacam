@@ -71,6 +71,15 @@ local DEFAULT_Z = 0.2
 local DEFAULT_ATTENUATION = {0.4, 3, 20}
 local DEFAULT_LIGHT_COLOR = {1, 1, 1, 1}
 
+local QUICK_DEFAULT_INDEX = { -- Skip all compare and return exected value
+	["numChildren"] = true,
+	["rotation"] = true, 
+	["parent"] = true,
+	["localToContent"] = true,
+	["x"] = true,
+	["y"] = true,
+}
+
 local FUNCTIONS_DISPLAY = {
 	["rotate"] = true, 
 	["scale"] = true, 
@@ -221,7 +230,9 @@ local inheritTable = setmetatable({ -- Returned when `.super` is used, to forwar
 
 local entangleMetatable = {
 	__index = function(self, index)
-		if index == "parentRotation" then -- .parent can be nil apparently when deleting object
+		if QUICK_DEFAULT_INDEX[index] then -- Shortcut for default values
+			return self._superMeta.__index(self, index)
+		elseif index == "parentRotation" then -- .parent can be nil apparently when deleting object
 			return self.parent and self.parent.viewRotation -- Will be nil once we hit normal objects in hierarchy
 		elseif index == "fill" then
 			rawset(self.fillProxy, "fill", self._superMeta.__index(self, index)) -- Update original fill & normal reference in proxy, skipping metamethods
@@ -259,15 +270,8 @@ local entangleMetatable = {
 	end,
 	__newindex = function(self, index, value)
 		local normalObject = self.normalObject
-		if index == "normal" then
-			if normalObject.fill then
-				normalObject.fill = value
-				if value then
-					normalObject.fill.effect = normalShaders.getEffect()
-					normalObject.fill.effect.rotate.rotation = math.rad(self.viewRotation + self.fill.rotation) -- Fill might be rotated
-				end
-			end
-		elseif index == "parentRotation" then -- Parent is telling us to update our view rotation 
+		
+		if index == "parentRotation" then -- Parent is telling us to update our view rotation 
 			self.viewRotation = value + self.rotation
 			
 			if normalObject.fill and normalObject.fill.effect then
@@ -279,6 +283,14 @@ local entangleMetatable = {
 					local lightObject = self[cIndex]
 					
 					lightObject.parentRotation = self.viewRotation
+				end
+			end
+		elseif index == "normal" then -- Forward normal fill
+			if normalObject.fill then
+				normalObject.fill = value
+				if value then
+					normalObject.fill.effect = normalShaders.getEffect()
+					normalObject.fill.effect.rotate.rotation = math.rad(self.viewRotation + self.fill.rotation) -- Fill might be rotated
 				end
 			end
 		elseif index == "camera" and value then
@@ -304,7 +316,7 @@ local entangleMetatable = {
 				touchArea.isHitTestable = (self.isVisible and (self.alpha > 0)) or self.isHitTestable
 			end
 			
-			if index == "rotation" and value then -- Propagate rotation change
+			if (index == "rotation") and value then -- Propagate rotation change
 				-- Rotation was already set in _superMeta
 				self.viewRotation = (self.parentRotation or 0) + value -- parentRotation can be nil
 				

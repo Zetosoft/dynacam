@@ -607,12 +607,8 @@ createWorld()
 createSliders()
 startGame()
 
-local function crashGame()
-	
-	
-	
-	
+local function testStuff()
 
 end
 
-crashGame()
+testStuff()

@@ -624,7 +624,7 @@ local function buildPolygonCanvas(camera)
 	camera.canvas = display.newPolygon(0, 0, cVertices)
 end
 
-local function addCameraFramebuffers(camera)
+local function rebuildCameraEngine(camera)
 	if camera.canvas then -- Camera already has a canvas
 		-- Prevent content deletion
 		camera:insert(camera.diffuseView)
@@ -666,6 +666,8 @@ local function addCameraFramebuffers(camera)
 	-- Refresh existing light drawers
 	for lIndex = 1, camera.lightDrawers.numChildren do
 		local lightDrawer = camera.lightDrawers[lIndex]
+		lightDrawer.width = vcw
+		lightDrawer.height = vch
 		lightDrawer.fill = {type = "image", filename = camera.normalBuffer.filename, baseDir = camera.normalBuffer.baseDir}
 		lightDrawer.fill.blendMode = "add"
 		lightDrawer.fill.effect = "filter.custom.light"
@@ -747,7 +749,7 @@ function dynacam.refresh()
 	vchr = 1 / vch
 	
 	for cIndex = 1, #cameras do
-		addCameraFramebuffers(cameras[cIndex])
+		rebuildCameraEngine(cameras[cIndex])
 	end
 end
 
@@ -828,8 +830,7 @@ function dynacam.newCamera(options)
 	camera.lightDrawers = display.newGroup()
 	camera.ambientLightColor = ambientLightColor
 	
-	-- Frame buffers
-	addCameraFramebuffers(camera)
+	rebuildCameraEngine(camera)
 	
 	camera:insert(camera.canvas)
 	camera:insert(camera.defaultContainer)

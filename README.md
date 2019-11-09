@@ -29,11 +29,18 @@ This plugin adds dynamic lighting and full camera tracking to your game using no
 	- dynacam.*newCamera(**options**)* : Returns new *cameraObject*, all properties are optional
 		- **options.damping** (number) Number specifying damping. Higher value means slower camera tracking. Default is 10
 		- **options.ambientLightColor** (table) 4 Indexed table specifying RGB and intensity respective float values. Default is black *{0, 0, 0, 1}*
-		- **options.width** (number) If specified, camera will be of specific width, or width ratio if less than 1. Full screen width is the default
-		- **options.height** (number) If specified, camera will be of specific height, or height ratio if less than 1. Full screen height is the default
+		- **options.width** (number) If specified, camera will be of specific width, or width ratio if less than 1. Full screen resize width is the default.
+		- **options.height** (number) If specified, camera will be of specific height, or height ratio if less than 1. Full screen resize height is the default.
 		- **options.vertices** (table) Table containing normalized (0 - 1) vertices for canvas shape. If specified, *.width* and *.height* options will be ignored.
+		- **options.cullLimit** (number) Cull limit in pixel value. Lights outside the edge plus this number will not be rendered. default is 800.
 	- dynacam.*refresh()*
 		- Refresh internal display values in case of a viewport dimensions change
+	- dynacam.*newLight(**options**)* : Creates and tracks new light
+        - **options.color** (table) Table containing normalized RGB and intensity values
+		- **options.attenuationFactors** (table) Table containing *constant*, *linear* and *quadratic* light attenuation factors
+		- **options.z** (number) Light height (0 - 1 range)
+	- dynacam.*addBody(**object**, **...**)*
+        - Create and track physics body. Uses same parameters as *physics.addBody()*. Used to update physics body normal rotation correctly. Lights will not work on a physics body correctly unless tracked by dynacam.
 - *cameraObject*
     - cameraObject:*add(**lightObject**, **isFocus**)*
         - Add specified *lightObject* to camera hierarchy. Think of it like an *:insert()* replacement.
@@ -50,16 +57,6 @@ This plugin adds dynamic lighting and full camera tracking to your game using no
         - **onComplete** Optional function called when zoom animation completes.
     - cameraObject:*setBounds(**minX**, **maxX**, **minY**, **maxY**)*
         - Sets camera boundaries
-    - cameraObject:*newLight(**options**)* : Creates and tracks new light
-        - **options.color** (table) Table containing normalized RGB and intensity values
-		- **options.attenuationFactors** (table) Table containing *constant*, *linear* and *quadratic* light attenuation factors
-		- **options.z** (number) Light height (0 - 1 range)
-	- cameraObject:*trackLight(**light**)*
-	    - Adds light to camera so light can be rendered
-    - cameraObject:*addBody(**object**, **...**)*
-        - Create and track physics body. Uses same parameters as *physics.addBody()*
-    - cameraObject:*trackBody(**body**)*
-        - Track physics body. Used to update physics body normal rotation correctly. Lights will not work on a physics body correctly until tracked by a camera.
     - cameraObject:*setFocus(**object**, **options**)*
         - Will track and follow **object** in camera center.
         - **options.soft** (bool) If *false*, focus will be immediate

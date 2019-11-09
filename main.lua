@@ -601,9 +601,7 @@ createSliders()
 startGame()
 
 local function testStuff()
-	timer.performWithDelay(11000, function()
-		display.remove(camera1)
-	end)
+
 end
 
 testStuff()

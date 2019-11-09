@@ -87,8 +87,8 @@ local touchMonitorMetatable = { -- Monitor transform changes
 }
 ---------------------------------------------- Local functions 
 local function finalizeAdded(event)
-	local borrowed = event.target
-	rawset(borrowed, FLAG_REMOVE, true)
+	local added = event.target
+	rawset(added, FLAG_REMOVE, true)
 end
 
 local function cameraAdd(self, object, isFocus, normal)
@@ -179,6 +179,9 @@ local function finalizeMaskedObject(event)
 	
 	display.remove(object.maskObject)
 	object.maskObject = nil
+	
+	setmetatable(object, object._superMetaTouch)
+	object._superMetaTouch = nil
 end
 
 local function protectedMaskInsert(self, newObject)

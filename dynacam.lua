@@ -364,7 +364,7 @@ local function enterFrame(event) -- Do not refactor! performance is better
 				local lightDrawer = display.newRect(0, 0, vcw, vch)
 				lightDrawer.fill = {type = "image", filename = camera.normalBuffer.filename, baseDir = camera.normalBuffer.baseDir}
 				lightDrawer.fill.blendMode = "add"
-				lightDrawer.fill.effect = "filter.custom.light"
+				lightDrawer.fill.effect = "filter.dynacam.light"
 				camera.lightDrawers:insert(lightDrawer)
 			end
 		elseif diff < 0 then -- Remove
@@ -599,11 +599,11 @@ local function cameraSetDrawMode(self, value)
 	elseif value == "listeners" then
 		self.touchView.isVisible = true
 		self.canvas.fill = self.canvas.defaultFill -- Restore saved default fill
-		self.canvas.fill.effect = "composite.custom.apply"
+		self.canvas.fill.effect = "composite.dynacam.apply"
 		self.canvas.fill.effect.ambientLightColor = self.ambientLightColor
 	elseif not value then -- Default
 		self.canvas.fill = self.canvas.defaultFill -- Restore saved default fill
-		self.canvas.fill.effect = "composite.custom.apply"
+		self.canvas.fill.effect = "composite.dynacam.apply"
 		self.canvas.fill.effect.ambientLightColor = self.ambientLightColor
 	end
 	
@@ -667,7 +667,7 @@ local function rebuildCameraEngine(camera)
 		lightDrawer.height = vch
 		lightDrawer.fill = {type = "image", filename = camera.normalBuffer.filename, baseDir = camera.normalBuffer.baseDir}
 		lightDrawer.fill.blendMode = "add"
-		lightDrawer.fill.effect = "filter.custom.light"
+		lightDrawer.fill.effect = "filter.dynacam.light"
 	end
 	
 	-- Refresh default fill
@@ -677,7 +677,7 @@ local function rebuildCameraEngine(camera)
 		paint2 = {type = "image", filename = camera.lightBuffer.filename, baseDir = camera.lightBuffer.baseDir}
 	}
 	camera.canvas.fill = camera.canvas.defaultFill
-	camera.canvas.fill.effect = "composite.custom.apply"
+	camera.canvas.fill.effect = "composite.dynacam.apply"
 	camera.canvas.fill.effect.ambientLightColor = camera.ambientLightColor
 end
 
@@ -718,8 +718,8 @@ local function setDimensions(camera, options)
 	values.cullMinX = 0 - cullX
 	values.cullMaxX = 1 + cullX
 	
-	values.cullMinY = 0 - cullX
-	values.cullMaxY = 1 + cullX
+	values.cullMinY = 0 - cullY
+	values.cullMaxY = 1 + cullY
 end
 ---------------------------------------------- Functions
 function dynacam.start()

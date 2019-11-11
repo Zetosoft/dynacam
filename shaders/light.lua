@@ -5,7 +5,7 @@ local kernel = {}
 
 kernel.language = "glsl"
 kernel.category = "filter"
-kernel.group = "custom"
+kernel.group = "dynacam"
 kernel.name = "light"
 kernel.uniformData =
 {

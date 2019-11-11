@@ -29,7 +29,6 @@ local quantum = {
 local tableRemove = table.remove
 local pcall = pcall
 ---------------------------------------------- Variables
-local tripped
 ---------------------------------------------- Local functions 1
 local function protectedInsert(self, lightObject)
 	if self.super then
@@ -75,13 +74,15 @@ local DEFAULT_Z = 0.2
 local DEFAULT_ATTENUATION = {0.4, 3, 20}
 local DEFAULT_LIGHT_COLOR = {1, 1, 1, 1}
 
-local QUICK_DEFAULT_INDEX = { -- Skip all compare and return exected value
+local QUICK_DEFAULT_INDEX = { -- Skip all compare and return expected value
 	["numChildren"] = true,
 	["rotation"] = true, 
 	["parent"] = true,
 	["localToContent"] = true,
 	["x"] = true,
 	["y"] = true,
+	["xScale"] = true,
+	["yScale"] = true,
 }
 
 local FUNCTIONS_DISPLAY = {
@@ -109,12 +110,12 @@ local FUNCTIONS = {
 	LINE = quantum.utils.merge(FUNCTIONS_DISPLAY, {
 			["append"] = true
 	}),
-	GROUP = quantum.utils.merge(FUNCTIONS_DISPLAY, {
+	GROUP = quantum.utils.merge(FUNCTIONS_DISPLAY, { -- Container too
 		["insert"] = lightInsert,
 	})
 }
 
-local HIT_REFRESH = {
+local HIT_REFRESH = { -- Refresh touch area on newindex
 	["alpha"] = true,
 	["isVisible"] = true,
 	["isHitTestable"] = true,

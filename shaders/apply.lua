@@ -5,7 +5,7 @@ local kernel = {}
 
 kernel.language = "glsl"
 kernel.category = "composite"
-kernel.group = "custom"
+kernel.group = "dynacam"
 kernel.name = "apply"
 kernel.uniformData =
 {

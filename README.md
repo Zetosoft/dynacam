@@ -103,6 +103,44 @@ This plugin adds dynamic lighting and full camera tracking to your game using no
 - *cameraObject*
     - cameraObject.values.*targetRotation* (number) : Use this value to manually rotate the internal camera view.
 
+### Examples
+---
+Set up a new camera, add objects, add lights, & track an object
+````lua
+local dynacam = require("dynacam") -- Require plugin
+local camera = dynacam.newCamera() -- Create a new camera and position it
+camera.x = display.contentCenterX
+camera.y = display.contentCenterY
+
+local background = dynacam.newGroup() -- Add a background layer
+camera:add(background) -- Add BG
+
+local bgCircle = dynacam.newCircle(0, 50) -- BG circle
+background:insert(bgCircle)
+
+local foreground = dynacam.newGroup() -- Add a foreground layer
+camera:add(foreground) -- Add FG
+
+local light = dynacam.newLight() -- Create a new light
+foreground:insert(light)
+
+local fgRect = dynacam.newRect(0, 0, 100, 100) -- FG rect
+background:insert(fgRect)
+
+dynacam.start() -- Start plugin
+
+camera:setFocus(fgRect) -- Set focus on rect, placing it on center of camera.
+transition.to(fgRect, {delay = 1000, time = 5000, x = 5000}) -- Camera should follow rect, leaving circle behind
+````
+Texturing a rect
+````lua
+local rect = dynacam.newRect(0, 0, 500, 500)
+rect.fill = {type = "image", filename = "diffuse.png"}
+rect.normal = {type = "image", filename = "normal.png"}
+````
+
+
+
 ---
 Copyright (c) 2019, Basilio Germán
 All rights reserved.

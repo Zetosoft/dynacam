@@ -515,9 +515,9 @@ local function startGame()
 	camera1:add(mapGroup)
 	camera1:setFocus(smallShip)
 	
-	camera2:add(mapGroup)
-	camera2:setFocus(otherShip, {trackRotation = false})
-	camera2:setZoom(0.625, 0, 0)
+--	camera2:add(mapGroup)
+--	camera2:setFocus(otherShip, {trackRotation = false})
+--	camera2:setZoom(0.625, 0, 0)
 	 
 	local counter = 0
 	
@@ -554,26 +554,26 @@ end
 local function initialize()
 	display.setStatusBar( display.HiddenStatusBar )
 	
-	local hWidth = display.viewableContentWidth * 0.5
-	
-	local vertices1 = {0, 0, 0.625, 0, 0.375, 1, 0, 1}
+--	local hWidth = display.viewableContentWidth * 0.5
+--	local vertices1 = {0, 0, 0.625, 0, 0.375, 1, 0, 1}
 	camera1 = dynacam.newCamera({
 		damping = 10, 
-		width = hWidth,
-		vertices = vertices1,
+--		width = hWidth,
+--		vertices = vertices1,
 	})
 --	camera1:setDrawMode("normal")
-	camera1.anchorChildren = true
-	camera1.anchorX = 0
-	camera1.x = display.screenOriginX
+--	camera1.anchorChildren = true
+--	camera1.anchorX = 0
+--	camera1.x = display.screenOriginX
+	camera1.x = display.contentCenterX
 	camera1.y = display.contentCenterY
 	
 	local vertices2 = {0.625, 0, 1, 0, 1, 1, 0.375, 1}
-	camera2 = dynacam.newCamera({damping = 10, width = hWidth, vertices = vertices2})
-	camera2.anchorChildren = true
-	camera2.anchorX = 1
-	camera2.x = display.screenOriginX + display.viewableContentWidth
-	camera2.y = display.contentCenterY
+--	camera2 = dynacam.newCamera({damping = 10, width = hWidth, vertices = vertices2})
+--	camera2.anchorChildren = true
+--	camera2.anchorX = 1
+--	camera2.x = display.screenOriginX + display.viewableContentWidth
+--	camera2.y = display.contentCenterY
 	
 	physics.start()
 	physics.setGravity(0, 0)

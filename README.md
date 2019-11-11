@@ -22,6 +22,8 @@ This plugin adds dynamic lighting and full camera tracking to your game using no
 - Fill and effect userdata have been also replaced by a pointer table, same precautions apply.
 - Performance wise, light objects count as 2 display objects, event forwarded objects count as 3, so these can stack up easily, test well for performance!
 - Multiple cameras will share the global FPS, so 2 cameras will both work at 30 FPS if Corona is set to 60 FPS, 3 cameras will work at 20 FPS each, and so on. 
+- Nil can be used in functions that specify a *baseDir* parameter, *system.ResourceDirectory* will be used.
+- The *baseDir* parameter is not optional anymore! use *nil* for default value
 
 ### Functions
 ---
@@ -89,7 +91,7 @@ This plugin adds dynamic lighting and full camera tracking to your game using no
 	- quantum.*newPolygon(**x**, **y**, **vertices**)*
 	- quantum.*newMesh(**options**)*
 	- quantum.*newText(**options**)*
-		- **options.normal** (table) Table containing normal vector values
+		- **options.normal** (table) Table containing normal vector values, RGB + Intensity
 	- quantum.*newSprite(**diffuseSheet**, **normalSheet**, **sequenceData**)*
 		- **normalSheet** (table) same as diffuseSheet, but using normal map filename instead.
 	- quantum.*newSnapshot(**width**, **height**)*

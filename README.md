@@ -24,6 +24,7 @@ This plugin adds dynamic lighting and full camera tracking to your game using no
 - Multiple cameras will share the global FPS, so 2 cameras will both work at 30 FPS if Corona is set to 60 FPS, 3 cameras will work at 20 FPS each, and so on. 
 - Nil can be used in functions that specify a *baseDir* parameter, *system.ResourceDirectory* will be used.
 - The *baseDir* parameter is not optional anymore! use *nil* for default value
+- Cameras created with *vertices* will still have their touch area and default view area as a square container, so in some cases these objects will bleed out of a camera edge.
 
 ### Functions
 ---
@@ -35,7 +36,7 @@ This plugin adds dynamic lighting and full camera tracking to your game using no
 		- **options.width** (number) If specified, camera will be of specific width, or width ratio if less than 1. Full screen resize width is the default.
 		- **options.height** (number) If specified, camera will be of specific height, or height ratio if less than 1. Full screen resize height is the default.
 		- **options.vertices** (table) Table containing normalized (0 - 1 range) vertices for canvas shape. If specified, *.width* and *.height* options will be ignored.
-		- **options.cullLimit** (number) Cull limit in pixel value. Lights outside the edge plus this number will not be rendered. default is 800.
+		- **options.cullLimit** (number) Cull limit in pixel value. Lights with a position outside any edge plus/minus this number will not be rendered. default is 800. Think of it as a safe border where lights will still be rendered.
 	- dynacam.*refresh()*
 		- Refresh internal display values in case of a viewport dimensions change, updates fullscreen dimensions on all cameras
 	- dynacam.*newLight(**options**)* : Creates and tracks new light
@@ -61,7 +62,7 @@ This plugin adds dynamic lighting and full camera tracking to your game using no
     - cameraObject:*setBounds(**minX**, **maxX**, **minY**, **maxY**)*
         - Sets camera boundaries
     - cameraObject:*setFocus(**object**, **options**)*
-        - Will track and follow **object** in camera center.
+        - Will track and follow **object** in camera center. dynacam.*start()* has to be called for any tracking to occur.
         - **options.soft** (bool) If *false*, focus will be immediate
         - **options.trackRotation** (bool) If *true*, will track object rotation
     - cameraObject:*removeFocus()*

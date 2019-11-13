@@ -359,11 +359,14 @@ local function enterFrame(event) -- Do not refactor! performance is better
 		local diff = #lights - camera.lightDrawers.numChildren
 		
 		if diff > 0 then -- Create
-			local vcw = values.vcw or vcw
-			local vch = values.vch or vch
+			local pixelWidth = (values.vcw or vcw) * camera.values.lightBufferScale
+			local pixelHeight = (values.vch or vch) * camera.values.lightBufferScale
+			
+			local inverseBufferScale = 1 / camera.values.lightBufferScale
 			
 			for aIndex = 1, diff do 
-				local lightDrawer = display.newRect(0, 0, vcw, vch)
+				local lightDrawer = display.newRect(0, 0, pixelWidth, pixelHeight)
+				lightDrawer:scale(inverseBufferScale, inverseBufferScale)
 				lightDrawer.fill = {type = "image", filename = camera.normalBuffer.filename, baseDir = camera.normalBuffer.baseDir}
 				lightDrawer.fill.blendMode = "add"
 				lightDrawer.fill.effect = "filter.dynacam.light"
@@ -646,9 +649,11 @@ local function rebuildCameraEngine(camera)
 	camera.container.height = vch
 	
 	-- Recreate frame buffers
-	camera.diffuseBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch})
-	camera.normalBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch})
-	camera.lightBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch})
+	local pW = vcw
+	local pH = vch
+	camera.diffuseBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch, pixelWidth = pW, pixelHeight = pH})
+	camera.normalBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch, pixelWidth = pW * camera.values.lightBufferScale, pixelHeight = pH * camera.values.lightBufferScale})
+	camera.lightBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch, pixelWidth = pW * camera.values.lightBufferScale, pixelHeight = pH * camera.values.lightBufferScale})
 	
 	camera.normalBuffer:setBackground(0.5, 0.5, 1)
 	
@@ -811,6 +816,9 @@ function dynacam.newCamera(options)
 		accumulateBuffer = false,
 		trackRotation = false,
 		debug = false,
+		
+		-- Buffer scaling
+		lightBufferScale = options.lightBufferScale or 1
 	}
 	
 	setDimensions(camera, options)

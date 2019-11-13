@@ -523,12 +523,10 @@ local function startGame()
 --	camera2:add(mapGroup)
 --	camera2:setFocus(otherShip, {trackRotation = false})
 --	camera2:setZoom(0.625, 0, 0)
-	 
-	local counter = 0
 	
 	controlObject = smallShip
-	Runtime:addEventListener("enterFrame", function()
---		counter = (counter + 1) % (360 * 4)
+	Runtime:addEventListener("enterFrame", function(event)
+--		local counter = (event.frame + 1) % (360 * 4)
 --		local angle = math.rad(counter * 0.25)
 --		camera1.lights[4].x = 700 + math.cos(angle) * 600
 --		camera1.lights[4].y = 700 + math.sin(angle) * 600

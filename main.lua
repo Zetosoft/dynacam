@@ -509,8 +509,37 @@ local function createSliders()
 	end
 end
 
+local function createBgTexture(imgSize, numStars, maxStarSize)
+	local bgTex = graphics.newTexture({type = "canvas", width = imgSize, height = imgSize, pixelWidth = imgSize, pixelHeight = imgSize})
+
+	for sIndex = 1, numStars do
+		local starSize = math.random(2, maxStarSize)
+		local limit = imgSize - starSize
+		local x = math.random(-limit, limit)
+		local y = math.random(-limit, limit)
+		
+		local star = display.newImageRect("images/spaceStars2.png", starSize, starSize)
+		star.x = x
+		star.y = y
+		bgTex:draw(star)
+		
+		bgTex:invalidate()
+	end
+
+	bgTex:invalidate()
+	
+	return bgTex
+end
+
 local function startGame()
 	dynacam.start()
+	
+	local bgTexture = createBgTexture(1024, 500, 20)
+	local bg = display.newRect(0, 0, 1000, 1000)
+	bg.fill = {type = "image", filename = bgTexture.filename, baseDir = bgTexture.baseDir}
+	bg.x = 0
+	bg.y = 500
+	camera1:add(bg, nil, true)
 	
 	camera1:add(mapGroup)
 	camera1:setFocus(smallShip)

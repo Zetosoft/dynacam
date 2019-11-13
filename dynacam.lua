@@ -91,12 +91,8 @@ local function finalizeAdded(event)
 	rawset(added, FLAG_REMOVE, true)
 end
 
-local function cameraAdd(self, object, isFocus, normal)
+local function cameraAdd(self, object, normal, back)
 	if object.normalObject then -- Only lightObjects have a normalObject property
-		if isFocus then
-			self.values.focus = object
-		end
-		
 		if object.camera then -- Object belongs to another camera, track as borrowed for both cameras
 			if object.camera ~= self then
 				self.borrowed[#self.borrowed + 1] = object
@@ -110,7 +106,9 @@ local function cameraAdd(self, object, isFocus, normal)
 		end
 	elseif normal then -- Normal object
 		self.normalView:insert(object)
-	else -- Regular display object
+	elseif back then -- Display object (back)
+		self.defaultViewBack:insert(object)
+	else -- Display object (front)
 		self.defaultView:insert(object)
 	end
 	
@@ -125,6 +123,7 @@ local function cameraSetZoom(self, zoom, zoomDelay, zoomTime, onComplete)
 	transition.cancel(self.diffuseView)
 	transition.cancel(self.normalView)
 	transition.cancel(self.defaultView)
+	transition.cancel(self.defaultViewBack)
 	transition.cancel(self.values)
 		
 	if zoomDelay <= 0 and zoomTime <= 0 then
@@ -138,6 +137,8 @@ local function cameraSetZoom(self, zoom, zoomDelay, zoomTime, onComplete)
 		
 		self.defaultView.xScale = zoom
 		self.defaultView.yScale = zoom
+		self.defaultViewBack.xScale = zoom
+		self.defaultViewBack.yScale = zoom
 		
 		if onComplete then
 			onComplete()
@@ -147,7 +148,9 @@ local function cameraSetZoom(self, zoom, zoomDelay, zoomTime, onComplete)
 		
 		transition.to(self.diffuseView, {xScale = zoom, yScale = zoom, time = zoomTime, delay = zoomDelay, transition = easing.inOutQuad})
 		transition.to(self.normalView, {xScale = zoom, yScale = zoom, time = zoomTime, delay = zoomDelay, transition = easing.inOutQuad})
+		
 		transition.to(self.defaultView, {xScale = zoom, yScale = zoom, time = zoomTime, delay = zoomDelay, transition = easing.inOutQuad})
+		transition.to(self.defaultViewBack, {xScale = zoom, yScale = zoom, time = zoomTime, delay = zoomDelay, transition = easing.inOutQuad})
 	end
 end
 
@@ -288,6 +291,7 @@ local function enterFrame(event) -- Do not refactor! performance is better
 		camera.diffuseView.rotation = (camera.diffuseView.rotation - (camera.diffuseView.rotation - targetRotation) * values.dampingRatio)
 		camera.normalView.rotation = camera.diffuseView.rotation
 		camera.defaultView.rotation = camera.diffuseView.rotation
+		camera.defaultViewBack.rotation = camera.diffuseView.rotation
 		
 		-- Damp x and y
 		values.currentX = (values.currentX - (values.currentX - (values.focus.x or 0)) * values.dampingRatio)
@@ -318,6 +322,8 @@ local function enterFrame(event) -- Do not refactor! performance is better
 		
 		camera.defaultView.x = finalX
 		camera.defaultView.y = finalY
+		camera.defaultViewBack.x = finalX
+		camera.defaultViewBack.y = finalY
 		
 		-- Update rotation normal on all children
 		if values.trackRotation then -- Only if global rotation has significantly changed
@@ -342,10 +348,6 @@ local function enterFrame(event) -- Do not refactor! performance is better
 	end
 	
 	-- Prepare buffers
-	camera.lightBuffer:setBackground(0) -- Clear buffers
-	camera.diffuseBuffer:setBackground(0)
-	camera.normalBuffer:setBackground(0)
-	
 	camera.diffuseBuffer:draw(camera.diffuseView)
 	camera.diffuseBuffer:invalidate({accumulate = values.accumulateBuffer})
 	
@@ -495,6 +497,7 @@ local function cameraSetFocus(self, object, options)
 		self.diffuseView.rotation = 0
 		self.normalView.rotation = 0
 		self.defaultView.rotation = 0
+		self.defaultViewBack.rotation = 0
 	end
 	self.values.trackRotation = trackRotation
 end
@@ -516,7 +519,8 @@ local function finalizeCamera(event)
 	camera.normalView = nil
 	camera.diffuseView = nil
 	camera.defaultView = nil
-	camera.defaultContainer = nil
+	camera.defaultViewBack = nil
+	camera.container = nil
 	camera.canvas = nil
 	
 	camera.borrowed = nil
@@ -638,15 +642,15 @@ local function rebuildCameraEngine(camera)
 	local vch = camera.values.vch or vch
 	
 	-- Update container dimensions
-	camera.touchView.width = vcw
-	camera.touchView.height = vch
-	camera.defaultContainer.width = vcw
-	camera.defaultContainer.height = vch
+	camera.container.width = vcw
+	camera.container.height = vch
 	
 	-- Recreate frame buffers
 	camera.diffuseBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch})
 	camera.normalBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch})
 	camera.lightBuffer = graphics.newTexture({type = "canvas", width = vcw, height = vch})
+	
+	camera.normalBuffer:setBackground(0.5, 0.5, 1)
 	
 	-- Create or refresh canvas
 	if not camera.canvas then -- Canvas - this is what is actually shown
@@ -814,13 +818,16 @@ function dynacam.newCamera(options)
 	camera.diffuseView = display.newGroup()
 	camera.normalView = display.newGroup()
 	
-	camera.defaultView = display.newGroup() -- Default objects will be inserted on a top layer
-	camera.defaultContainer = display.newContainer(camera.values.vcw or vcw, camera.values.vch or vch)
-	camera.defaultContainer:insert(camera.defaultView)
+	camera.defaultView = display.newGroup()
+	camera.defaultViewBack = display.newGroup() 
 	
-	camera.touchView = display.newContainer(camera.values.vcw or vcw, camera.values.vch or vch)
+	camera.container = display.newContainer(camera.values.vcw or vcw, camera.values.vch or vch)
+	
+	
+	camera.touchView = display.newGroup()
 	camera.touchView.isVisible = false
 	camera.touchView.isHitTestable = true
+	
 	
 	camera.borrowed = {}
 	camera.listenerObjects = {} -- Touch & tap proxies
@@ -829,9 +836,12 @@ function dynacam.newCamera(options)
 	
 	rebuildCameraEngine(camera)
 	
-	camera:insert(camera.canvas)
-	camera:insert(camera.defaultContainer)
-	camera:insert(camera.touchView)
+	camera.container:insert(camera.defaultViewBack)
+	camera.container:insert(camera.canvas)
+	camera.container:insert(camera.defaultView)
+	camera.container:insert(camera.touchView)
+	
+	camera:insert(camera.container)
 	
 	camera.add = cameraAdd
 	camera.setZoom = cameraSetZoom

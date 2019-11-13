@@ -50,8 +50,11 @@ This plugin adds dynamic lighting and full camera tracking to your game using no
     - dynacam.*stop()*
         - Stops updating all cameras
 - *cameraObject*
-    - cameraObject:*add(**object**, **isFocus**, **normal**)*
-        - Add specified *object* to camera hierarchy. Think of it like an *:insert()* replacement. **isFocus** (boolean) will make the camera track this object. **normal** (boolean) can be specified to insert object to normal view. Works with default and light objects
+    - cameraObject:*add(**object**, **normal**, **back**)*
+        - Add specified *object* to camera hierarchy. Think of it like an *:insert()* replacement. **options** can be the following:
+            - **options.normal** (bool) Adds object to normal view
+            - **options.back** (bool) Adds object to default back view
+	**isFocus** (boolean) will make the camera track this object. **normal** (boolean) can be specified to insert object to normal view. Works with default and light objects
     - cameraObject:*getZoom()*
         - Returns zoom value. Default is 1
     - cameraObject:*setZoom(**zoom**, **zoomDelay**, **zoomTime**, **onComplete**)*

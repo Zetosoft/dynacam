@@ -7,15 +7,12 @@ Dynamic Lights + Camera
 Feel that your game needs to expand beyond the default screen limits? Want to add dynamic lighting effects to your game? Want to add split screen to your game? This is the plugin for you.
 This plugin adds dynamic lighting and full camera tracking to your game using normal maps and light objects.
 
-![Diffuse](images/demo_diffuse.jpg)
-+
-![Normal](images/demo_normal.jpg)
-=
-![Diffuse](images/demo_diffuse.jpg)
-+
-![Light](images/demo_light.jpg)
-=
-![Composite](images/demo_composite.jpg)
+
+![Diffuse](images/demo_diffuse.jpg) + ![Normal](images/demo_normal.jpg) **+ Light Data =** ![Light](images/demo_light.jpg)
+
+
+![Diffuse](images/demo_diffuse.jpg) **+** ![Light](images/demo_light.jpg) **=** ![Composite](images/demo_composite.jpg)
+
 
 ### Notes
 

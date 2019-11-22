@@ -7,6 +7,12 @@ Dynamic Lights + Camera
 Feel that your game needs to expand beyond the default screen limits? Want to add dynamic lighting effects to your game? Want to add split screen to your game? This is the plugin for you.
 This plugin adds dynamic lighting and full camera tracking to your game using normal maps and light objects.
 
+![Diffuse](images/wall.png)
++
+![Normal](images/wall_n.png)
+=
+![Normal](images/wall_n.png)
+
 ### Notes
 
 - The **quantum.*** engine is responsible for *lightObject* creation

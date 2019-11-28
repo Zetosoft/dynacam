@@ -185,10 +185,9 @@ local function finalizeMaskedObject(event)
 end
 
 local function protectedMaskInsert(self, newObject)
-	self:regularInsert(newObject)
 	local maskObject = self.maskObject
-	
 	local newMaskObject = self.buildMaskGroup(newObject, true, self.touchArea.color)
+	self:entangledInsert(newObject)
 	maskObject:insert(newMaskObject)
 end
 
@@ -210,8 +209,9 @@ local function buildMaskGroup(object, internalFlag, color)
 			maskObject:insert(childMaskObject)
 		end
 		
-		object.regularInsert = object.insert
-		object.insert = createMaskInsert
+		object.entangledInsert = object.entangleFunctions.insert
+		object.entangleFunctions.insert = createMaskInsert
+		
 		object.buildMaskGroup = buildMaskGroup
 	elseif object.path then -- ShapeObject
 		local path = object.path

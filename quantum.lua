@@ -367,7 +367,7 @@ local function entangleObject(lightObject, entangleFunctions) -- Basic light obj
 	}
 	lightObject.fillProxy = setmetatable(fillProxy, fillProxyMetatable)
 	
-	lightObject.entangleFunctions = entangleFunctions
+	lightObject.entangleFunctions = quantum.utils.copy(entangleFunctions) -- Own reference to entangle Functions
 	
 	local superMeta = getmetatable(lightObject)
 	rawset(lightObject, "_superMeta", superMeta)

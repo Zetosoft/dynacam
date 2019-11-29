@@ -209,9 +209,8 @@ local function buildMaskGroup(object, internalFlag, color)
 			maskObject:insert(childMaskObject)
 		end
 		
-		object.entangledInsert = object.entangleFunctions.insert
-		object.entangleFunctions.insert = createMaskInsert
-		
+		object.entangledInsert = object.entangleFunctions.insert -- Store super function
+		object.entangleFunctions.insert = createMaskInsert -- Override inheritance
 		object.buildMaskGroup = buildMaskGroup
 	elseif object.path then -- ShapeObject
 		local path = object.path

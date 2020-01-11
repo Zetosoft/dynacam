@@ -2,16 +2,15 @@
 ### Overview
 ---
 
-Dynamic Lights + Camera
+Dynamic Lights + Camera for [Corona](https://coronalabs.com/)
 
-Feel that your game needs to expand beyond the default screen limits? Want to add dynamic lighting effects to your game? Want to add split screen to your game? This is the plugin for you.
-Add dynamic lighting and full camera tracking to your game using normal maps and light objects:
+Feel that your game needs to expand beyond the default screen limits? Want to add dynamic lighting effects to your game? Want to add split screen to your game? This is the plugin for you. Add dynamic lighting and full camera tracking to your game using normal maps and light objects:
 
 # ![Normal](demo/normal.jpg) **+** ![Data](demo/data.jpg) **=** ![Light](demo/light.jpg)
 
 # ![Diffuse](demo/diffuse.jpg) **+** ![Light](demo/light.jpg) **=** ![Composite](demo/composite.jpg)
 
-You can [try out the desktop demo here](./demo) (Move with arrow keys)
+You can [try out the web demo for desktop here](./demo) (Move with arrow keys)
 
 ### Notes
 
@@ -45,26 +44,25 @@ You can [try out the desktop demo here](./demo) (Move with arrow keys)
 		- **options.cullLimit** (number) Cull limit in pixel value. Lights with a position outside any edge plus/minus this number will not be rendered. default is 800. Think of it as a safe border where lights will still be rendered.
 	- dynacam.*refresh()*
 		- Refresh internal display values in case of a viewport dimensions change, updates fullscreen dimensions on all cameras
-	- dynacam.*newLight(**options**)* : Creates and tracks new light
+	- dynacam.*newLight(**options**)* : Creates and returns a new light object
         - **options.color** (table) Table containing normalized RGB and intensity values
 		- **options.attenuationFactors** (table) Table containing *constant*, *linear* and *quadratic* light attenuation factors
 		- **options.z** (number) Light height (0 - 1 range)
 	- dynacam.*addBody(**object**, **...**)*
-        - Create and track physics body. Uses same parameters as *physics.addBody()*. Used to update physics body normal rotation correctly. Lights will not work on a physics body correctly unless tracked by dynacam.
+        - Create a light physics body. Uses same parameters as *physics.addBody()*. Used to update physics body normal rotation correctly. Lights will not work on a physics body correctly unless created by dynacam. Returns *true* if body was created and *false* if not.
 	- dynacam.*start()*
         - Starts updating all cameras
     - dynacam.*stop()*
         - Stops updating all cameras
 - *cameraObject*
     - cameraObject:*add(**object**, **normal**, **back**)*
-        - Add specified *object* to camera hierarchy. Think of it like an *:insert()* replacement. **options** can be the following:
-            - **options.normal** (bool) Adds object to normal view
-            - **options.back** (bool) Adds object to default back view
-	**isFocus** (boolean) will make the camera track this object. **normal** (boolean) can be specified to insert object to normal view. Works with default and light objects
+        - Add specified *object* to camera hierarchy. Think of it like an *:insert()* replacement:
+            - **normal** (bool) Adds object to normal map view, use this when you only want to change the normal part of the canvas, changing the surface reflection but not the diffuse.
+            - **back** (bool) Adds default object to default back view. This background layer is unaffected by lighting, usefull for backgrounds, for example.
     - cameraObject:*getZoom()*
-        - Returns zoom value. Default is 1
+        - Returns zoom value. Default is 1.
     - cameraObject:*setZoom(**zoom**, **zoomDelay**, **zoomTime**, **onComplete**)*
-        - Sets camera **zoom** (number), as a scale number
+        - Sets camera **zoom** (number), as a scale number, higher values zoom in and smaller values zoom out
         - **zoomDelay** (number) delay in milliseconds before zoom begins or sets, set to 0 for instant
         - **zoomTime** (number) time in milliseconds for zoom to get to specified value, set to 0 for instant
         - **onComplete** Optional function called when zoom animation completes.

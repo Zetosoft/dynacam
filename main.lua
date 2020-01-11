@@ -1,5 +1,5 @@
-require("mobdebug").start()
-require("mobdebug").coro()
+--require("mobdebug").start()
+--require("mobdebug").coro()
 ----------------------------------------------- Demo game - Basilio Germán
 local physics = require("physics")
 local widget = require("widget")

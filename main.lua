@@ -1,5 +1,5 @@
---require("mobdebug").start()
---require("mobdebug").coro()
+require("mobdebug").start()
+require("mobdebug").coro()
 ----------------------------------------------- Demo game - Basilio Germán
 local physics = require("physics")
 local widget = require("widget")
@@ -114,7 +114,7 @@ local function addTestSprites()
 	 -- Test sprite coin
 	local coinSpriteSheet = {
 		sheetData = {width = 34, height = 34, numFrames = 16},
-		sequenceData = {{name = "idle", start = 1, count = 16, time = 1000}},
+		sequenceData = {{name = "idle", start = 2, count = 1, time = 1000}},
 		diffuse = "images/spinning_coin_gold.png",
 		normal = "images/spinning_coin_gold_n.png",
 	}
@@ -171,7 +171,7 @@ local function addTestSprites()
 	
 	local spriteSheet = {
 		sheetData = {width = 64, height = 64, numFrames = 2},
-		sequenceData = {{name = "idle", start = 1, count = 2, time = 500}},
+		sequenceData = {{name = "idle", start = 1, count = 1, time = 500}},
 		diffuse = "images/powerup_health.png",
 		normal = "images/powerup_health_n.png",
 	}
@@ -361,7 +361,7 @@ end
 local function addMoreTestSprites()
 	local spriteSheet = {
 		sheetData = {width = 90, height = 130, numFrames = 16},
-		sequenceData = {{name = "idle", start = 1, count = 16, time = 600}},
+		sequenceData = {{name = "idle", start = 2, count = 1, time = 600}},
 		diffuse = "images/arrow_128x88_horizontal_texture.png",
 		normal = "images/arrow_128x88_horizontal_normal.png",
 	}
@@ -406,7 +406,7 @@ end
 
 local function createSlider(valueScale, offset, label, listener, defValue)
 	local sGroup = display.newGroup()
-	sGroup.alpha = 0.5
+	sGroup.alpha = 0
 	
 	local slider = widget.newSlider({
 		x = 0,
@@ -522,7 +522,7 @@ local function startGame()
 	
 --	camera2:add(mapGroup)
 --	camera2:setFocus(otherShip, {trackRotation = false})
---	camera2:setZoom(0.625, 0, 0)
+	camera1:setZoom(0.825, 0, 0)
 	
 	controlObject = smallShip
 	Runtime:addEventListener("enterFrame", function(event)
@@ -563,8 +563,19 @@ local function initialize()
 		damping = 10, 
 --		width = hWidth,
 --		vertices = vertices1,
-	})
---	camera1:setDrawMode("normal")
+})
+
+	local mIndex = 0
+	local modes = {"normal", "diffuse", "light", "listeners", false}
+	timer.performWithDelay(1500, function()
+		mIndex = mIndex + 1
+		if mIndex > #modes then
+			mIndex = 1
+		end
+		camera1:setDrawMode(modes[mIndex])
+	end, -1)
+	
+	camera1:setDrawMode("normal")
 --	camera1.anchorChildren = true
 --	camera1.anchorX = 0
 --	camera1.x = display.screenOriginX

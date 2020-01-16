@@ -8,7 +8,6 @@ require(requirePath.."shaders.rotate")
 require(requirePath.."shaders.apply")
 require(requirePath.."shaders.light")
 
-
 local quantum = require(requirePath.."quantum")
 local CoronaLibrary = require("CoronaLibrary")
 local physics = require("physics")

@@ -1,5 +1,6 @@
 .DS_Store
 dependencies/
+build/
 mobdebug.lua
 
 *.out

@@ -1,4 +1,3 @@
---display.pixelWidth and display.pixelHeight 
 application = {
 	content = {
 		fps = 60,

@@ -8,9 +8,9 @@
 	"ignore": [
 		"main.lua",
 		"config.lua",
-		"README.md",
 		"build.settings",
-		"images/"
+		"README.md",
+		"docs/"
 	],
 	"private": true
 }

@@ -6,11 +6,11 @@ Dynamic Lights + Camera for [Corona](https://coronalabs.com/)
 
 Feel that your game needs to expand beyond the default screen limits? Want to add dynamic lighting effects to your game? Want to add split screen to your game? This is the plugin for you. Add dynamic lighting and full camera tracking to your game using normal maps and light objects:
 
-# ![Normal](demo/normal.jpg) **+** ![Data](demo/data.jpg) **=** ![Light](demo/light.jpg)
+# ![Normal](docs/normal.jpg) **+** ![Data](docs/data.jpg) **=** ![Light](demo/light.jpg)
 
-# ![Diffuse](demo/diffuse.jpg) **+** ![Light](demo/light.jpg) **=** ![Composite](demo/composite.jpg)
+# ![Diffuse](docs/diffuse.jpg) **+** ![Light](docs/light.jpg) **=** ![Composite](demo/composite.jpg)
 
-You can [try out the web demo for desktop here](./demo) (Move with arrow keys)
+You can [try out the web demo for desktop here](https://www.zetosoft.com/dynacam/demo) (Move with arrow keys)
 
 ### Notes
 

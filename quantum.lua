@@ -396,7 +396,7 @@ function quantum.newLight(options, debugLight, key) -- Only meant to be used int
 	
 	entangleObject(light)
 	
-	light.position = {0, 0, z} -- Internal table, auto updates for fast shader data pass
+	light.position = {options.x or 0, options.y or 0, z} -- Internal table, auto updates for fast shader data pass
 	light.scale = scale
 	light.z = z
 	light.attenuationFactors = quantum.utils.copy(attenuationFactors)

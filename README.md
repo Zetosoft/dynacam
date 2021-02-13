@@ -2,7 +2,7 @@
 ### Overview
 ---
 
-Dynamic Lights + Camera for [Corona](https://coronalabs.com/)
+Dynamic Lights + Camera for [Solar2D](https://solar2d.com/)
 
 Feel that your game needs to expand beyond the default screen limits? Want to add dynamic lighting effects to your game? Want to add split screen to your game? This is the plugin for you. Add dynamic lighting and full camera tracking to your game using normal maps and light objects:
 
@@ -26,7 +26,7 @@ You can [try out the web demo for desktop here](https://www.zetosoft.com/dynacam
 - All default functions have been replaced with a pointer function, for your own safety do not reference it as it loses its pointed function after referencing it again, even with a different index (translate, scale, rotate, etc.) The engine will warn about unusual behavior.
 - Fill and effect userdata have been also replaced by a pointer table, same precautions apply.
 - Performance wise, light objects count as 2 display objects, event forwarded objects count as 3, so these can stack up easily, test well for performance!
-- Multiple cameras will share the global FPS, so 2 cameras will both work at 30 FPS if Corona is set to 60 FPS, 3 cameras will work at 20 FPS each, and so on. 
+- Multiple cameras will share the global FPS, so 2 cameras will both work at 30 FPS if Solar2D is set to 60 FPS, 3 cameras will work at 20 FPS each, and so on. 
 - Nil can be used in functions that specify a *baseDir* parameter, *system.ResourceDirectory* will be used.
 - The *baseDir* parameter is not optional anymore! use *nil* for default value
 - Cameras created with *vertices* will still have their touch area and default view area as a square container, so in some cases these objects will bleed out of a camera edge.
@@ -152,5 +152,5 @@ rect.normal = {type = "image", filename = "normal.png"}
 
 
 ---
-Copyright (c) 2019-2020, Zetosoft
+Copyright (c) 2019-2021, Zetosoft
 All rights reserved.

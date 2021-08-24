@@ -63,8 +63,6 @@ uniform P_DEFAULT float u_UserData3; // pointLightScale
 
 varying P_COLOR vec3 pointLightColor;
 
-P_NORMAL float proportion = CoronaTexelSize.y / CoronaTexelSize.x;
-
 P_UV float GetDistanceAttenuation(in P_UV vec3 attenuationFactors, in P_UV float lightDistance) {
 	P_UV float constantFactor = attenuationFactors.x;
 	P_UV float linearFactor = attenuationFactors.y;
@@ -91,6 +89,7 @@ P_COLOR vec4 FragmentKernel(P_UV vec2 texCoord) {
 	normalPixel.y = -normalPixel.y;
 	
 	// Fix scale proportion
+	P_NORMAL float proportion = CoronaTexelSize.y / CoronaTexelSize.x;
 	P_UV vec3 fragmentToLight = (pointLightPos - vec3(texCoord, 0.0));
 	fragmentToLight.x *= proportion;
 	fragmentToLight.xy *= u_UserData3;

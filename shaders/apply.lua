@@ -37,9 +37,9 @@ uniform P_COLOR vec4 u_UserData0; // ambientLightColor
 
 varying P_COLOR vec3 ambientLightColor;
 
-P_NORMAL float proportion = CoronaTexelSize.y / CoronaTexelSize.x;
-
 P_COLOR vec4 FragmentKernel(P_UV vec2 texCoord) {
+	P_NORMAL float proportion = CoronaTexelSize.y / CoronaTexelSize.x;
+	
 	// Diffuse color
 	P_COLOR vec4 diffuseColor = texture2D(u_FillSampler0, texCoord);
 

@@ -310,7 +310,16 @@ local function enterFrame(event) -- Do not refactor! performance is better
 		focusRotationY = mathCos(radAngle) * values.currentY
 		rotationY = mathSin(radAngle) * values.currentX
 		finalY = (-rotationY - focusRotationY) * values.zoom
-		
+
+		-- Shake Camera
+		if camera.values.shakeFrames > 0 then
+			if camera.values.shakeFrames % 2 == 1 then
+				finalX = finalX + (math.random(camera.values.shakeIntensity) - (camera.values.shakeIntensity/2))*(camera.values.shakeFrames/100)
+				finalY = finalY + (math.random(camera.values.shakeIntensity) - (camera.values.shakeIntensity/2))*(camera.values.shakeFrames/100)
+			end
+			camera.values.shakeFrames = camera.values.shakeFrames - 1
+		end
+
 		-- Apply x and y
 		camera.diffuseView.x = finalX
 		camera.diffuseView.y = finalY
@@ -501,6 +510,13 @@ local function cameraSetFocus(self, object, options)
 		self.defaultViewBack.rotation = 0
 	end
 	self.values.trackRotation = trackRotation
+end
+
+local function cameraShake(self, frames, intensity)
+	if intensity > 1 then
+	self.values.shakeFrames = frames or 0
+	self.values.shakeIntensity = intensity or 16
+	end
 end
 
 local function finalizeCamera(event)
@@ -816,7 +832,11 @@ function dynacam.newCamera(options)
 		debug = false,
 		
 		-- Buffer scaling
-		lightBufferScale = options.lightBufferScale or 1
+		lightBufferScale = options.lightBufferScale or 1,
+
+		-- Shake
+		shakeFrames = 0,
+		shakeIntensity = 16
 	}
 	
 	setDimensions(camera, options)
@@ -857,6 +877,8 @@ function dynacam.newCamera(options)
 	camera.setFocus = cameraSetFocus
 	camera.removeFocus = cameraRemoveFocus
 	camera.toPoint = cameraToPoint
+
+	camera.shake = cameraShake
 	
 	camera.addListenerObject = cameraAddListenerObject
 	
